@@ -198,7 +198,7 @@ const Header = ({ user }: PropsType) => {
       <nav className="header">
         <div className="header-content">
           <Link className="logo" onClick={resetSidebar} to={"/"}>
-            MarketPlace
+            DisposableMart
           </Link>
           
           {/* Desktop Navigation */}
