@@ -44,7 +44,7 @@ const Login = () => {
       if ("data" in res) {
         toast.success(res.data.message);
         const data = await getUser(user.uid);
-        dispatch(userExist(data?.user!));
+        dispatch(userExist(data?.user));
       } else {
         const error = res.error as FetchBaseQueryError;
         const message = (error.data as MessageResponse).message;
