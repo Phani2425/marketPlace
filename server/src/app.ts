@@ -42,7 +42,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: [clientURL],
+    origin: '*',
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
