@@ -3,9 +3,7 @@ import { AiFillFileText } from "react-icons/ai";
 import {
   FaChartBar,
   FaChartLine,
-  FaChartPie,
-  FaGamepad,
-  FaStopwatch,
+  FaChartPie
 } from "react-icons/fa";
 import { HiMenuAlt4 } from "react-icons/hi";
 import { IoIosPeople } from "react-icons/io";
@@ -142,24 +140,12 @@ const DivTwo = ({ location }: { location: Location }) => (
 
 const DivThree = ({ location }: { location: Location }) => (
   <div>
-    <h5>Apps</h5>
+    <h5>Admin Features</h5>
     <ul>
-      <Li
-        url="/admin/app/stopwatch"
-        text="Stopwatch"
-        Icon={FaStopwatch}
-        location={location}
-      />
       <Li
         url="/admin/app/coupon"
         text="Coupon"
         Icon={RiCoupon3Fill}
-        location={location}
-      />
-      <Li
-        url="/admin/app/toss"
-        text="Toss"
-        Icon={FaGamepad}
         location={location}
       />
     </ul>
