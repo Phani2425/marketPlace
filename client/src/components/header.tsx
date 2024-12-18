@@ -90,105 +90,107 @@ const Header = ({ user }: PropsType) => {
   };
 
   const renderSidebarContent = () => {
-    if (isCategoriesView) {
+     if(isSidebarOpen){
+      if (isCategoriesView) {
+        return (
+          <div className="sidebar-content">
+            <ul className="categories-list">
+              <li className="categories-header">
+                <button 
+                  className="back-btn" 
+                  onClick={() => setIsCategoriesView(false)}
+                >
+                  <FaAngleLeft /> 
+                </button>
+                <h2>Categories</h2>
+              </li>
+              {categories.map((category) => (
+                <li key={category}>
+                  <Link 
+                    onClick={resetSidebar} 
+                    to={`/search?category=${category.toLowerCase()}`}
+                  >
+                    {category}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      }
+  
       return (
         <div className="sidebar-content">
-          <ul className="categories-list">
-            <li className="categories-header">
-              <button 
-                className="back-btn" 
-                onClick={() => setIsCategoriesView(false)}
-              >
-                <FaAngleLeft /> 
-              </button>
-              <h2>Categories</h2>
+          <div className="sidebar-header">
+            <h2>Menu</h2>
+            <button 
+              className="close-btn" 
+              onClick={resetSidebar}
+            >
+              <FaTimes />
+            </button>
+          </div>
+          <ul className="main-menu">
+            <li>
+              <Link onClick={resetSidebar} to={"/search"}>
+                <FaSearch /> Search
+              </Link>
             </li>
-            {categories.map((category) => (
-              <li key={category}>
-                <Link 
-                  onClick={resetSidebar} 
-                  to={`/search?category=${category.toLowerCase()}`}
-                >
-                  {category}
+            <li>
+              <Link onClick={resetSidebar} to={"/cart"} className="cart-link">
+                <FaShoppingBag /> Cart 
+                {cartItems.length > 0 && (
+                  <span className="cart-count">{cartItems.length}</span>
+                )}
+              </Link>
+            </li>
+            
+            <li>
+              <button 
+                className="categories-btn"
+                onClick={() => setIsCategoriesView(true)}
+              >
+                <FaList /> Categories
+              </button>
+            </li>
+  
+            {user?._id ? (
+              <>
+                {user.role === "admin" && (
+                  <li>
+                    <Link 
+                      onClick={resetSidebar} 
+                      to="/admin/dashboard"
+                    >
+                      <FaUser /> Admin Dashboard
+                    </Link>
+                  </li>
+                )}
+                <li>
+                  <Link onClick={resetSidebar} to="/orders">
+                    <FaUser /> My Orders
+                  </Link>
+                </li>
+                <li>
+                  <button 
+                    className="logout-btn"
+                    onClick={logoutHandler}
+                  >
+                    <FaSignOutAlt /> Sign Out
+                  </button>
+                </li>
+              </>
+            ) : (
+              <li>
+                <Link to={"/login"}>
+                  <FaSignInAlt /> Login
                 </Link>
               </li>
-            ))}
+            )}
           </ul>
         </div>
       );
-    }
-
-    return (
-      <div className="sidebar-content">
-        <div className="sidebar-header">
-          <h2>Menu</h2>
-          <button 
-            className="close-btn" 
-            onClick={resetSidebar}
-          >
-            <FaTimes />
-          </button>
-        </div>
-        <ul className="main-menu">
-          <li>
-            <Link onClick={resetSidebar} to={"/search"}>
-              <FaSearch /> Search
-            </Link>
-          </li>
-          <li>
-            <Link onClick={resetSidebar} to={"/cart"} className="cart-link">
-              <FaShoppingBag /> Cart 
-              {cartItems.length > 0 && (
-                <span className="cart-count">{cartItems.length}</span>
-              )}
-            </Link>
-          </li>
-          
-          <li>
-            <button 
-              className="categories-btn"
-              onClick={() => setIsCategoriesView(true)}
-            >
-              <FaList /> Categories
-            </button>
-          </li>
-
-          {user?._id ? (
-            <>
-              {user.role === "admin" && (
-                <li>
-                  <Link 
-                    onClick={resetSidebar} 
-                    to="/admin/dashboard"
-                  >
-                    <FaUser /> Admin Dashboard
-                  </Link>
-                </li>
-              )}
-              <li>
-                <Link onClick={resetSidebar} to="/orders">
-                  <FaUser /> My Orders
-                </Link>
-              </li>
-              <li>
-                <button 
-                  className="logout-btn"
-                  onClick={logoutHandler}
-                >
-                  <FaSignOutAlt /> Sign Out
-                </button>
-              </li>
-            </>
-          ) : (
-            <li>
-              <Link to={"/login"}>
-                <FaSignInAlt /> Login
-              </Link>
-            </li>
-          )}
-        </ul>
-      </div>
-    );
+     }
   };
 
   return (
@@ -196,16 +198,16 @@ const Header = ({ user }: PropsType) => {
       <nav className="header">
         <div className="header-content">
           <Link className="logo" onClick={resetSidebar} to={"/"}>
-            CompanyName
+            MarketPlace
           </Link>
           
           {/* Desktop Navigation */}
           <div className="nav">
             <Link onClick={resetSidebar} to={"/search"}>
-              <FaSearch />
+              <FaSearch className="white" />
             </Link>
             <Link onClick={resetSidebar} to={"/cart"} className="cart-icon">
-              <FaShoppingBag />
+              <FaShoppingBag className="white" />
               {cartItems.length > 0 && (
                 <span className="cart-count">{cartItems.length}</span>
               )}
@@ -230,7 +232,7 @@ const Header = ({ user }: PropsType) => {
                       Orders
                     </Link>
                     <button onClick={logoutHandler}>
-                      <FaSignOutAlt />
+                      <FaSignOutAlt  />
                       Sign Out
                     </button>
                   </div>
@@ -238,7 +240,7 @@ const Header = ({ user }: PropsType) => {
               </>
             ) : (
               <Link to={"/login"}>
-                <FaSignInAlt />
+                <FaSignInAlt className="white" />
               </Link>
             )}
           </div>

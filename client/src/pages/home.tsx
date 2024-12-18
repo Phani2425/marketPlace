@@ -8,8 +8,7 @@ import { useLatestProductsQuery } from "../redux/api/productAPI";
 import { addToCart } from "../redux/reducer/cartReducer";
 import { CartItem } from "../types/types";
 import videoCover from "../assets/videos/cover.mp4";
-import { FaAnglesDown, FaHeadset , FaUser } from "react-icons/fa6";
-import { FaSearch,FaShoppingCart } from "react-icons/fa";
+import { FaAnglesDown, FaHeadset  } from "react-icons/fa6";
 import { motion, AnimatePresence } from "framer-motion";
 import { Slider } from "6pp";
 import { TbTruckDelivery } from "react-icons/tb";
@@ -94,6 +93,8 @@ const clients = [
 const banners = [
   "https://res.cloudinary.com/dj5q966nb/image/upload/v1719253445/rmbjpuzctjdbtt8hewaz.png",
   "https://res.cloudinary.com/dj5q966nb/image/upload/v1719253433/ticeufjqvf6napjhdiee.png",
+  "https://t4.ftcdn.net/jpg/02/49/50/15/360_F_249501541_XmWdfAfUbWAvGxBwAM0ba2aYT36ntlpH.jpg",
+  "https://www.zilliondesigns.com/blog/wp-content/uploads/Ecommerce-Sales-Banner-9.jpg",
 ];
 
 const categories = [

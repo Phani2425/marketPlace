@@ -28,7 +28,7 @@ const Cart = () => {
     dispatch(addToCart({ ...cartItem, quantity: cartItem.quantity + 1 }));
   };
   const decrementHandler = (cartItem: CartItem) => {
-    if (cartItem.quantity <= 1) return;
+    if (cartItem.quantity == 1) return;
 
     dispatch(addToCart({ ...cartItem, quantity: cartItem.quantity - 1 }));
   };

@@ -38,8 +38,15 @@
   .nav {
     @include flex(row, flex-end, center);
     gap: 2rem;
+    .white{
+      color: white;
+    }
+    a{
+      color: 'black';
+      font-weight: 700;
+    }
 
-    a, button {
+     button {
       color: $color1;
       text-decoration: none;
       font-weight: 500;
@@ -57,6 +64,13 @@
         font-size: 1.4rem;
         transition: transform 0.3s ease, color 0.3s ease;
       }
+    }
+
+    .logout-btn{
+      color: #e74c3c;
+          border-top: 1px solid #eee;
+          padding-top: 0.8rem;
+          margin-top: 0.3rem;
     }
 
     .cart-icon {
@@ -79,7 +93,7 @@
   dialog {
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 8px;
-    padding: 1rem;
+    padding: 0.7rem;
     width: 150px;
     position: absolute;
     right: 0;
@@ -97,7 +111,7 @@
         width: 100%;
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
-        color: #333; // Ensure the text color is dark
+        color: #555; // Ensure the text color is dark
         transition: all 0.2s ease;
         text-align: left;
         border-radius: 4px;
@@ -124,6 +138,10 @@
           border-top: 1px solid #eee;
           padding-top: 0.8rem;
           margin-top: 0.3rem;
+
+          &:hover {
+            color: #e74c3c;
+          }
         }
       }
     }
