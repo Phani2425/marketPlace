@@ -2,6 +2,7 @@
   background-color: #333;
   color: #fff;
   padding: 40px 0;
+  margin-top: 60px;
 
   .footer-container {
     max-width: 1200px;
@@ -19,6 +20,7 @@
     flex: 1;
     min-width: 250px;
     margin-bottom: 30px;
+    
 
     h4 {
       font-size: 18px;
@@ -65,6 +67,8 @@
       width: 40px;
       background-color: #404040;
       display: flex;
+      gap: 8px;
+      margin: 3px;
       align-items: center;
       justify-content: center;
       border-radius: 50%;

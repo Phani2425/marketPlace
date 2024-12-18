@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
@@ -7,11 +8,13 @@ import { useLatestProductsQuery } from "../redux/api/productAPI";
 import { addToCart } from "../redux/reducer/cartReducer";
 import { CartItem } from "../types/types";
 import videoCover from "../assets/videos/cover.mp4";
-import { FaAnglesDown, FaHeadset } from "react-icons/fa6";
-import { motion } from "framer-motion";
+import { FaAnglesDown, FaHeadset , FaUser } from "react-icons/fa6";
+import { FaSearch,FaShoppingCart } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 import { Slider } from "6pp";
 import { TbTruckDelivery } from "react-icons/tb";
 import { LuShieldCheck } from "react-icons/lu";
+import '../styles/_home.scss';
 
 const clients = [
   {
@@ -50,12 +53,10 @@ const clients = [
     src: "https://www.vectorlogo.zone/logos/figma/figma-ar21.svg",
     alt: "figma",
   },
-
   {
     src: "https://www.vectorlogo.zone/logos/github/github-ar21.svg",
     alt: "github",
   },
-
   {
     src: "https://www.vectorlogo.zone/logos/docker/docker-ar21.svg",
     alt: "Docker",
@@ -68,22 +69,18 @@ const clients = [
     src: "https://www.vectorlogo.zone/logos/nestjs/nestjs-ar21.svg",
     alt: "Nest.js",
   },
-
   {
     src: "https://www.vectorlogo.zone/logos/graphql/graphql-ar21.svg",
     alt: "GraphQL",
   },
-
   {
     src: "https://www.vectorlogo.zone/logos/jestjsio/jestjsio-ar21.svg",
     alt: "Jest",
   },
-
   {
     src: "https://www.vectorlogo.zone/logos/redis/redis-ar21.svg",
     alt: "Redis",
   },
-
   {
     src: "https://www.vectorlogo.zone/logos/postgresql/postgresql-ar21.svg",
     alt: "PostgreSQL",
@@ -98,6 +95,7 @@ const banners = [
   "https://res.cloudinary.com/dj5q966nb/image/upload/v1719253445/rmbjpuzctjdbtt8hewaz.png",
   "https://res.cloudinary.com/dj5q966nb/image/upload/v1719253433/ticeufjqvf6napjhdiee.png",
 ];
+
 const categories = [
   "Electronics",
   "Mobiles",
@@ -133,8 +131,18 @@ const services = [
 
 const Home = () => {
   const { data, isError, isLoading } = useLatestProductsQuery("");
-
   const dispatch = useDispatch();
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const addToCartHandler = (cartItem: CartItem) => {
     if (cartItem.stock < 1) return toast.error("Out of Stock");
@@ -150,104 +158,178 @@ const Home = () => {
     );
 
   return (
-    <>
-      <div className="home">
-        <section></section>
+    <div className="home">
 
-        <div>
-          <aside>
-            <h1>Categories</h1>
-            <ul>
-              {categories.map((i) => (
-                <li key={i}>
-                  <Link to={`/search?category=${i.toLowerCase()}`}>{i}</Link>
-                </li>
-              ))}
-            </ul>
-          </aside>
-          <Slider
-            autoplay
-            autoplayDuration={1500}
-            showNav={false}
-            images={banners}
-          />
-        </div>
+      <main className="main-content">
+        {
+          !isMobile && (
+            <motion.aside 
+          className={`categories ${isMobile ? 'mobile' : ''}`}
+          initial={isMobile ? { x: "-100%" } : { opacity: 0 }}
+          animate={isMobile ? { x: 0 } : { opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <h2>Categories</h2>
+          <ul>
+            {categories.map((category, index) => (
+              <motion.li
+                key={category}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Link 
+                  to={`/search?category=${category.toLowerCase()}`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category}
+                </Link>
+              </motion.li>
+            ))}
+          </ul>
+        </motion.aside>
+          )
+        }
 
-        <h1>
-          Latest Products
-          <Link to="/search" className="findmore">
-            More
-          </Link>
-        </h1>
-
-        <main>
-          {isLoading ? (
-            <>
-              {Array.from({ length: 6 }, (_, i) => (
-                <div key={i} style={{ height: "25rem" }}>
-                  <Skeleton width="18.75rem" length={1} height="20rem" />
-                  <Skeleton width="18.75rem" length={2} height="1.95rem" />
-                </div>
-              ))}
-            </>
-          ) : (
-            data?.products.map((i) => (
-              <ProductCard
-                key={i._id}
-                productId={i._id}
-                name={i.name}
-                price={i.price}
-                stock={i.stock}
-                handler={addToCartHandler}
-                photos={i.photos}
-              />
-            ))
-          )}
-        </main>
-      </div>
-
-      <article className="cover-video-container">
-        <div className="cover-video-overlay"></div>
-        <video autoPlay loop muted src={videoCover} />
-        <div className="cover-video-content">
-          <motion.h2
-            initial={{ x: -100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
+        <section className="content">
+          <motion.div 
+            className="banner"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            Fashion
+            <Slider
+              autoplay
+              autoplayDuration={3000}
+              showNav={false}
+              images={banners}
+            />
+          </motion.div>
+
+          <motion.h2 
+            className="section-title"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            Latest Products
+            <Link to="/search" className="view-more">View More</Link>
           </motion.h2>
-          {coverMessage.map((el, i) => (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{
-                duration: 0.25,
-                delay: i / 10,
-              }}
-              key={i}
-            >
-              {el}{" "}
-            </motion.span>
-          ))}
+
+          <div className="products-grid">
+            <AnimatePresence>
+              {isLoading
+                ? Array.from({ length: 8 }).map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="product-skeleton"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <Skeleton width="100%" height="200px" />
+                      <Skeleton width="70%" height="20px" />
+                      <Skeleton width="50%" height="20px" />
+                    </motion.div>
+                  ))
+                : data?.products
+                    .filter(
+                      (product) =>
+                        selectedCategory === "All" ||
+                        product.category === selectedCategory
+                    )
+                    .map((product) => (
+                      <motion.div
+                        key={product._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ProductCard
+                          productId={product._id}
+                          name={product.name}
+                          price={product.price}
+                          stock={product.stock}
+                          handler={addToCartHandler}
+                          photos={product.photos}
+                        />
+                      </motion.div>
+                    ))}
+            </AnimatePresence>
+          </div>
+        </section>
+      </main>
+
+      <motion.section 
+        className="video-section"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+      >
+        <div className="video-overlay"></div>
+        <video autoPlay loop muted src={videoCover} />
+        <div className="video-content">
+          <motion.h2
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            Fashion Redefined
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {coverMessage.join(" ")}
+          </motion.p>
         </div>
         <motion.span
+          className="scroll-indicator"
           animate={{
             y: [0, 10, 0],
-            transition: {
-              duration: 1,
-              repeat: Infinity,
-            },
+            transition: { duration: 1, repeat: Infinity },
           }}
         >
           <FaAnglesDown />
         </motion.span>
-      </article>
+      </motion.section>
 
-      <article className="our-clients">
-        <div>
-          <h2>Our Clients</h2>
-          <div>
+      <section className="services-section">
+        <motion.h2
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          Our Services
+        </motion.h2>
+        <div className="services-grid">
+          {services.map((service, index) => (
+            <motion.div
+              key={service.title}
+              className="service-card"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+            >
+              <div className="service-icon">{service.icon}</div>
+              <h3>{service.title}</h3>
+              <p>{service.description}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      <section className="our-clients">
+        <motion.h2
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          Our Clients
+        </motion.h2>
+        <div className="clients-grid">
             {clients.map((client, i) => (
               <motion.img
                 initial={{
@@ -268,8 +350,8 @@ const Home = () => {
               />
             ))}
           </div>
-
           <motion.p
+          className="clients-trust"
             initial={{ opacity: 0, y: -100 }}
             whileInView={{
               opacity: 1,
@@ -281,42 +363,10 @@ const Home = () => {
           >
             Trusted By 100+ Companies in 30+ countries
           </motion.p>
-        </div>
-      </article>
-
-      <hr
-        style={{
-          backgroundColor: "rgba(0,0,0,0.1)",
-          border: "none",
-          height: "1px",
-        }}
-      />
-
-      <article className="our-services">
-        <ul>
-          {services.map((service, i) => (
-            <motion.li
-              initial={{ opacity: 0, y: -100 }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-                transition: {
-                  delay: i / 20,
-                },
-              }}
-              key={service.title}
-            >
-              <div>{service.icon}</div>
-              <section>
-                <h3>{service.title}Y</h3>
-                <p>{service.title}</p>
-              </section>
-            </motion.li>
-          ))}
-        </ul>
-      </article>
-    </>
+      </section>
+    </div>
   );
 };
 
 export default Home;
+

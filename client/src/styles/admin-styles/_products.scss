@@ -3,13 +3,14 @@
   padding: 2rem;
   overflow: auto;
   @include square(100%);
-  max-height: 65vh;
+  max-height: 100vh;
+  
 }
 
 .create-product-btn {
   position: fixed;
   right: 2rem;
-  top: 2rem;
+  top: 5rem;
   @include square(2.5rem);
   @include flex(row, center, center, 0);
   border-radius: 50%;
@@ -36,6 +37,7 @@
 .product-management {
   @include flex(row, center, unset);
   padding: 4rem;
+  padding-bottom: 6rem;
 
   > section {
     overflow-y: auto;

@@ -15,8 +15,7 @@ import { RootState } from "../redux/store";
 import { NewOrderRequest } from "../types/api-types";
 import { responseToast } from "../utils/features";
 
-const stripeKey =
-  "pk_test_51OHpE1SEOz14slwcBOcGOweicHk9XITWgND9NAvr7ZJXIYdUiNyOHQtrbCsdQTLQqVAgDNeaDpPshuIO1PnHthtq00AJdf3gtG";
+const stripeKey = import.meta.env.VITE_STRIPE_KEY!;
 
 const stripePromise = loadStripe(stripeKey);
 

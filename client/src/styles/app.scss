@@ -95,19 +95,74 @@ $color3: rgb(0, 104, 136);
     }
   }
 
-  dialog {
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 10px;
-    width: 100px;
-    position: absolute;
-    left: calc(100% - 100px);
-    top: 8%;
-    > div {
-      @include flex(column, flex-start, center, 0.25rem);
+    position: relative;
+  
+    dialog {
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      padding: 0.5rem;
+      width: 150px;
+      position: absolute;
+      left: auto;
+      right: 15px;
+      top: 120%;
+      background: white;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      animation: slideIn 0.3s ease-in-out;
+  
+      > div {
+        @include flex(column, flex-start, stretch, 0.5rem);
+        width: 100%;
+  
+        a, button {
+          width: 100%;
+          padding: 0.5rem 1rem;
+          font-size: 0.9rem;
+          color: #333;
+          transition: all 0.2s ease;
+          text-align: left;
+          border-radius: 4px;
+          
+          &:hover {
+            background-color: #f5f5f5;
+            transform: translateX(4px);
+          }
+  
+          svg {
+            margin-right: 8px;
+            font-size: 0.9rem;
+            vertical-align: middle;
+          }
+        }
+  
+        button {
+          border: none;
+          background: none;
+          cursor: pointer;
+          
+          &:last-child {
+            color: #e74c3c;
+            border-top: 1px solid #eee;
+            padding-top: 0.8rem;
+            margin-top: 0.3rem;
+          }
+        }
+      }
     }
   }
-}
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
 
 .not-found {
   height: 80vh;
