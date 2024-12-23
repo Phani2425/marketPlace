@@ -14,6 +14,7 @@ import orderRoute from "./routes/order.js";
 import paymentRoute from "./routes/payment.js";
 import dashboardRoute from "./routes/stats.js";
 import sellerRoute from "./routes/seller.js";
+import adminRoute from "./routes/admin.js";
 
 config({
   path: "./.env",
@@ -60,6 +61,7 @@ app.use("/api/v1/order", orderRoute);
 app.use("/api/v1/payment", paymentRoute);
 app.use("/api/v1/dashboard", dashboardRoute);
 app.use("/api/v1/seller", sellerRoute);
+app.use("/api/v1/admin", adminRoute);
 
 app.use("/uploads", express.static("uploads"));
 app.use(errorMiddleware);

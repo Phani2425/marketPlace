@@ -1,0 +1,138 @@
+@import '../variables';
+@import '../mixins';
+
+.seller-dashboard {
+  padding: 2rem;
+  background-color: #f8f9fa;
+
+  .widget-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+
+    .widget {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+
+      .widget-info {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+
+        svg {
+          font-size: 2.5rem;
+          color: $color3;
+        }
+
+        div {
+          flex-grow: 1;
+
+          p {
+            color: #6c757d;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+          }
+
+          h4 {
+            font-size: 1.8rem;
+            color: $color4;
+            margin: 0;
+          }
+        }
+      }
+
+      &:hover {
+        transform: translateY(-5px);
+      }
+    }
+  }
+
+  .charts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+
+    .chart-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+      h2 {
+        color: $color4;
+        margin-bottom: 2rem;
+        font-size: 1.4rem;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .recent-orders {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+    h2 {
+      color: $color4;
+      margin-bottom: 2rem;
+      font-size: 1.4rem;
+      font-weight: 500;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+
+      th, td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+      }
+
+      th {
+        font-weight: 500;
+        color: $color4;
+        background: #f8f9fa;
+      }
+
+      .status {
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 500;
+
+        &.processing { 
+          background: #fff3e0;
+          color: #f57c00; 
+        }
+        &.shipped { 
+          background: #e3f2fd;
+          color: #1976d2; 
+        }
+        &.delivered { 
+          background: #e8f5e9;
+          color: #388e3c; 
+        }
+      }
+    }
+  }
+
+  @media (max-width: $mobile) {
+    padding: 1rem;
+
+    .charts-container {
+      grid-template-columns: 1fr;
+    }
+
+    table {
+      display: block;
+      overflow-x: auto;
+    }
+  }
+}

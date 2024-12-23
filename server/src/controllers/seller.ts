@@ -91,22 +91,39 @@ export const updateSellerProfile = TryCatch(async (req, res, next) => {
   });
 });
 
-// Get Seller Store
 export const getSellerStore = TryCatch(async (req, res, next) => {
   const { id } = req.params;
 
-  const seller = await User.findById(id).select(
-    "storeName storeDescription storeImage"
-  );
-  if (!seller) return next(new ErrorHandler("Store not found", 404));
+  if (!id) return next(new ErrorHandler("Store ID is required", 400));
 
-  const products = await Product.find({ seller: id, status: "approved" });
+  try {
+    // Find seller regardless of product status but must be approved seller
+    const seller = await User.findOne({
+      _id: id,
+      role: "seller",
+      storeStatus: "approved"
+    }).select("storeName storeDescription storeImage sellerRating joinedDate totalProducts");
 
-  return res.status(200).json({
-    success: true,
-    seller,
-    products,
-  });
+    if (!seller) return next(new ErrorHandler("Store not found", 404));
+
+    // Get seller's approved products
+    const products = await Product.find({ 
+      seller: seller._id,
+      status: "approved" 
+    }).sort({ createdAt: -1 }); // Latest products first
+
+    return res.status(200).json({
+      success: true,
+      seller: {
+        ...seller.toObject(),
+        totalProducts: products.length
+      },
+      products
+    });
+
+  } catch (error) {
+    return next(new ErrorHandler("Invalid store identifier", 400));
+  }
 });
 
 // Get Seller Products
@@ -300,17 +317,6 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
   });
 });
 
-export const getSellerProducts = TryCatch(async (req, res, next) => {
-  const seller = await User.findById(req.query.id);
-  if (!seller) return next(new ErrorHandler("Seller not found", 404));
-
-  const products = await Product.find({ seller: seller._id });
-
-  return res.status(200).json({
-    success: true,
-    products,
-  });
-});
 
 // Get Seller Orders
 export const getSellerOrders = TryCatch(async (req, res, next) => {
@@ -334,3 +340,144 @@ export const getSellerOrders = TryCatch(async (req, res, next) => {
     orders,
   });
 });
+
+export const getSellerAnalytics = TryCatch(async (req, res, next) => {
+  const sellerId= req.params.id;
+  const userId = req.query.id;
+
+  if (!userId) return next(new ErrorHandler("Please login first", 401));
+
+  const user = await User.findById(userId);
+  if (!user) return next(new ErrorHandler("Invalid user ID", 401));
+  if (user.role !== "seller") 
+    return next(new ErrorHandler("Only sellers can access this resource", 403));
+
+  const key = `seller-analytics-${sellerId}`;
+  let analytics = await redis.get(key);
+
+  if (analytics) {
+    analytics = JSON.parse(analytics);
+  } else {
+    // Fetch all necessary data
+    const [products, orders] = await Promise.all([
+      Product.find({ seller: sellerId }),
+      Order.find({ "orderItems.seller": sellerId })
+        .select("orderItems total createdAt status")
+        .populate("orderItems.product", "price")
+    ]);
+
+    // Calculate analytics
+    const totalProducts = products.length;
+    
+    // Stock status
+    const stockStatus = {
+      inStock: products.filter(p => p.stock > 10).length,
+      lowStock: products.filter(p => p.stock > 0 && p.stock <= 10).length,
+      outOfStock: products.filter(p => p.stock === 0).length
+    };
+
+    // Monthly data
+    const monthlyRevenue = new Array(6).fill(0);
+    const monthlySales = new Array(6).fill(0);
+
+    // Category distribution
+    const categoryDistribution = products.reduce((acc, product) => {
+      acc[product.category] = (acc[product.category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Process orders
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    orders.forEach(order => {
+      if (order.createdAt >= sixMonthsAgo) {
+        const monthIndex = 5 - Math.floor((new Date().getTime() - order.createdAt.getTime()) / (30 * 24 * 60 * 60 * 1000));
+        if (monthIndex >= 0) {
+          monthlyRevenue[monthIndex] += order.total;
+          monthlySales[monthIndex]++;
+        }
+      }
+    });
+
+    // Top performing products
+    const productSales = new Map();
+    const productRevenue = new Map();
+
+    orders.forEach(order => {
+      order.orderItems.forEach(item => {
+        if (item.seller.toString() === id) {
+          productSales.set(item.name, (productSales.get(item.name) || 0) + item.quantity);
+          productRevenue.set(item.name, (productRevenue.get(item.name) || 0) + (item.price * item.quantity));
+        }
+      });
+    });
+
+    const topProducts = Array.from(productSales.entries())
+      .map(([name, sales]) => ({
+        name,
+        sales,
+        revenue: productRevenue.get(name)
+      }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+
+    // Performance metrics
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+
+    const performanceMetrics = {
+      conversionRate: ((totalOrders / (products.length || 1)) * 100).toFixed(2),
+      averageOrderValue: totalOrders ? (totalRevenue / totalOrders).toFixed(2) : 0,
+      returnRate: 0 // You can implement actual return rate calculation if you have that data
+    };
+
+    analytics = {
+      totalProducts,
+      stockStatus,
+      monthlyRevenue,
+      monthlySales,
+      categoryDistribution,
+      topProducts,
+      performanceMetrics
+    };
+
+    // Cache the analytics
+    await redis.setex(key, 3600, JSON.stringify(analytics));
+  }
+
+  return res.status(200).json({
+    success: true,
+    analytics
+  });
+});
+
+
+export const searchSellers = TryCatch(async (req, res, next) => {
+    const { query } = req.query;
+    
+    if (!query) return next(new ErrorHandler("Search query is required", 400));
+  
+    const key = `seller-search-${query}`;
+    let sellers = await redis.get(key);
+  
+    if (sellers) {
+      sellers = JSON.parse(sellers);
+    } else {
+      sellers = await User.find({
+        role: "seller",
+        storeStatus: "approved",
+        $or: [
+          { storeName: { $regex: query, $options: "i" } },
+          { storeDescription: { $regex: query, $options: "i" } }
+        ]
+      }).select("_id storeName storeImage").limit(10);
+  
+      await redis.setex(key, 600, JSON.stringify(sellers));
+    }
+  
+    return res.status(200).json({
+      success: true,
+      sellers,
+    });
+  });

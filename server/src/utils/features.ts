@@ -5,6 +5,31 @@ import { redis } from "../app.js";
 import { Product } from "../models/product.js";
 import { Review } from "../models/review.js";
 import { InvalidateCacheProps, OrderItemType } from "../types/types.js";
+import nodemailer from 'nodemailer';
+
+interface EmailOptions {
+  email: string;
+  subject: string;
+  text: string;
+}
+
+export const sendEmail = async (options: EmailOptions) => {
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM,
+    to: options.email,
+    subject: options.subject,
+    text: options.text
+  });
+};
 
 export const findAverageRatings = async (
   productId: mongoose.Types.ObjectId

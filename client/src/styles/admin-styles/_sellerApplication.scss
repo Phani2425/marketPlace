@@ -1,0 +1,111 @@
+.seller-applications {
+    padding: 2rem;
+    
+    h1 {
+      font-size: 2rem;
+      color: $color4;
+      margin-bottom: 2rem;
+    }
+  
+    .applications-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 2rem;
+  
+      .application-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+  
+        &:hover {
+          transform: translateY(-5px);
+        }
+  
+        .store-info {
+          margin-bottom: 1.5rem;
+          padding-bottom: 1.5rem;
+          border-bottom: 1px solid #eee;
+  
+          h2 {
+            font-size: 1.5rem;
+            color: $color4;
+            margin-bottom: 0.5rem;
+          }
+  
+          .description {
+            color: #666;
+            line-height: 1.6;
+          }
+        }
+  
+        .seller-info {
+          margin-bottom: 1.5rem;
+  
+          p {
+            margin: 0.5rem 0;
+            color: #666;
+  
+            strong {
+              color: $color4;
+            }
+          }
+        }
+  
+        .actions {
+          display: flex;
+          gap: 1rem;
+  
+          button {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+  
+            &:hover {
+              transform: translateY(-2px);
+            }
+          }
+  
+          .approve-btn {
+            background: #e8f5e9;
+            color: #2e7d32;
+  
+            &:hover {
+              background: darken(#e8f5e9, 5%);
+            }
+          }
+  
+          .reject-btn {
+            background: #ffebee;
+            color: #c62828;
+  
+            &:hover {
+              background: darken(#ffebee, 5%);
+            }
+          }
+        }
+      }
+    }
+  
+    .no-applications {
+      text-align: center;
+      color: #666;
+      font-size: 1.2rem;
+      margin-top: 2rem;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .seller-applications {
+      padding: 1rem;
+  
+      .applications-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  }

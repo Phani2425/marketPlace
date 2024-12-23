@@ -3,7 +3,8 @@ import { AiFillFileText } from "react-icons/ai";
 import {
   FaChartBar,
   FaChartLine,
-  FaChartPie
+  FaChartPie,
+  FaStore
 } from "react-icons/fa";
 import { HiMenuAlt4 } from "react-icons/hi";
 import { IoIosPeople } from "react-icons/io";
@@ -108,6 +109,13 @@ const DivOne = ({ location }: { location: Location }) => (
         Icon={MdDiscount}
         location={location}
       />
+
+<Li
+  url="/admin/seller-applications"
+  text="Seller Applications"
+  Icon={FaStore}
+  location={location}
+/>
     </ul>
   </div>
 );

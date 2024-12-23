@@ -10,7 +10,9 @@ import {
   getSellerProfile,
   updateSellerProfile,
   becomeSeller,
-  getSellerStore
+  getSellerStore,
+  searchSellers,
+  getSellerAnalytics
 } from "../controllers/seller.js";
 import { mutliUpload } from "../middlewares/multer.js";
 
@@ -32,5 +34,7 @@ router.get("/products", sellerOnly, getSellerProducts);
 // Seller Analytics
 router.get("/stats", sellerOnly, getSellerStats);
 router.get("/orders", sellerOnly, getSellerOrders);
+router.get("/search", searchSellers);
+router.get("/analytics/:id", sellerOnly, getSellerAnalytics);
 
 export default router;

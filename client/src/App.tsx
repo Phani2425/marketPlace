@@ -45,6 +45,18 @@ const DiscountManagement = lazy(
 );
 
 const NewDiscount = lazy(() => import("./pages/admin/management/newdiscount"));
+const SellerApplications = lazy(() => import("./pages/admin/SellerApplications"));
+
+
+// Seller Routes
+const SellerDashboard = lazy(() => import("./pages/seller/Dashboard"));
+const BecomeSellerForm = lazy(() => import("./pages/seller/BecomeSellerForm"));
+const ProductListing = lazy(() => import("./pages/seller/ProductListing"));
+const SellerNewProduct = lazy(() => import("./pages/seller/SellerNewProduct"));
+const EditProduct = lazy(() => import("./pages/seller/EditProduct"));
+const StoreView = lazy(() => import("./pages/seller/StoreView"));
+const SellerOrders = lazy(() => import("./pages/seller/Orders"));
+const SellerAnalytics = lazy(() => import ("./pages/seller/Analytics"));
 
 const App = () => {
   const { user, loading } = useSelector(
@@ -74,6 +86,7 @@ const App = () => {
           <Route path="/search" element={<Search />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/store/:id" element={<StoreView />} /> 
           {/* Not logged In Route */}
           <Route
             path="/login"
@@ -91,6 +104,7 @@ const App = () => {
             <Route path="/orders" element={<Orders />} />
             <Route path="/order/:id" element={<OrderDetails />} />
             <Route path="/pay" element={<Checkout />} />
+            <Route path="/become-seller" element={<BecomeSellerForm />} />
           </Route>
           {/* Admin Routes */}
           <Route
@@ -131,24 +145,27 @@ const App = () => {
               path="/admin/discount/:id"
               element={<DiscountManagement />}
             />
+
+            <Route path="/admin/seller-applications" element={<SellerApplications />} />
           </Route>
 
-                    {/* Seller Routes */}
-                    <Route
+          {/* Seller Routes */}
+          <Route
             element={
-              <ProtectedRoute
+              <ProtectedRoute 
                 isAuthenticated={user ? true : false}
                 sellerOnly={true}
-                seller={user?.role === "seller" ? true : false}
+                seller={user?.role === "seller"}
               />
             }
           >
+              
             <Route path="/seller/dashboard" element={<SellerDashboard />} />
-            <Route path="/seller/products" element={<SellerProducts />} />
+            <Route path="/seller/products" element={<ProductListing />} />
+            <Route path="/seller/product/new" element={<SellerNewProduct />} />
+            <Route path="/seller/product/:id" element={<EditProduct />} />
             <Route path="/seller/orders" element={<SellerOrders />} />
-            <Route path="/seller/profile" element={<SellerProfile />} />
-            <Route path="/seller/product/new" element={<NewProduct />} />
-            <Route path="/seller/product/:id" element={<ProductManagement />} />
+            <Route path="/seller/analytics" element={<SellerAnalytics />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

@@ -10,6 +10,8 @@ import {
   FaTimes,
   FaAngleLeft,
   FaList,
+  FaStore,
+  FaStar
 } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
@@ -17,6 +19,11 @@ import { User } from "../types/types";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import toast from "react-hot-toast";
+import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import debounce from 'lodash/debounce';
+
+
 
 const categories = [
   "Electronics",
@@ -37,6 +44,15 @@ interface PropsType {
   user: User | null;
 }
 
+interface SellerSearchResult {
+  _id: string;
+  storeName: string;
+  storeImage?: string;
+  rating: number;
+  totalProducts: number;
+}
+
+
 const Header = ({ user }: PropsType) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -44,50 +60,83 @@ const Header = ({ user }: PropsType) => {
   const cartItems = useSelector((state: RootState) => state.cartReducer.cartItems);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  // Add event listener to close sidebar on screen resize and outside click
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        resetSidebar();
-      }
-    };
+  // Add seller search input and state
+const [sellerSearch, setSellerSearch] = useState<string>("");
+const [searchResults, setSearchResults] = useState<Array<{_id: string, storeName: string}>>([]);
+const [showSearchResults, setShowSearchResults] = useState(false);
+const [isSearching, setIsSearching] = useState(false);
+const searchRef = useRef<HTMLDivElement>(null);
 
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        sidebarRef.current && 
-        !sidebarRef.current.contains(event.target as Node) && 
-        isSidebarOpen
-      ) {
-        resetSidebar();
-      }
-    };
+ // Debounced search handler
+ const debouncedSearch = debounce(async (query: string) => {
+  if (query.length < 2) {
+    setSearchResults([]);
+    setShowSearchResults(false);
+    setIsSearching(false);
+    return;
+  }
 
-    // Add event listeners
-    window.addEventListener('resize', handleResize);
-    document.addEventListener('mousedown', handleClickOutside);
+  setIsSearching(true);
+  try {
+    const { data } = await axios.get(
+      `${import.meta.env.VITE_SERVER}/api/v1/seller/search?query=${query}`
+    );
+    setSearchResults(data.sellers);
+    setShowSearchResults(true);
+  } catch (error) {
+    console.error('Error searching sellers:', error);
+  } finally {
+    setIsSearching(false);
+  }
+}, 300);
 
-    // Cleanup event listeners
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isSidebarOpen]);
+const handleSellerSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const query = e.target.value;
+  setSellerSearch(query);
+  debouncedSearch(query);
+};
 
-  const logoutHandler = async () => {
-    try {
-      await signOut(auth);
-      toast.success("Sign Out Successfully");
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      setShowSearchResults(false);
+    }
+    if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node) && isSidebarOpen) {
       resetSidebar();
-    } catch (error) {
-      toast.error("Sign Out Fail");
     }
   };
 
-  const resetSidebar = () => {
-    setIsOpen(false);
-    setIsSidebarOpen(false);
-    setIsCategoriesView(false);
+  const handleResize = () => {
+    if (window.innerWidth >= 768) {
+      resetSidebar();
+    }
   };
+
+  window.addEventListener('resize', handleResize);
+  document.addEventListener('mousedown', handleClickOutside);
+
+  return () => {
+    window.removeEventListener('resize', handleResize);
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, [isSidebarOpen]);
+
+const resetSidebar = () => {
+  setIsOpen(false);
+  setIsSidebarOpen(false);
+  setIsCategoriesView(false);
+};
+
+const logoutHandler = async () => {
+  try {
+    await signOut(auth);
+    toast.success("Sign Out Successfully");
+    resetSidebar();
+  } catch (error) {
+    toast.error("Sign Out Fail");
+  }
+};
+
 
   const renderSidebarContent = () => {
      if(isSidebarOpen){
@@ -166,6 +215,16 @@ const Header = ({ user }: PropsType) => {
                     </Link>
                   </li>
                 )}
+                                  {user.role === "seller" && (
+                    <Link onClick={resetSidebar} to="/seller/dashboard">
+                      Seller Dashboard
+                    </Link>
+                  )}
+                  {user.role === "user" && (
+                    <Link onClick={resetSidebar} to="/become-seller">
+                      Become a Seller
+                    </Link>
+                  )}
                 <li>
                   <Link onClick={resetSidebar} to="/orders">
                     <FaUser /> My Orders
@@ -200,6 +259,64 @@ const Header = ({ user }: PropsType) => {
           <Link className="logo" onClick={resetSidebar} to={"/"}>
             DisposableMart
           </Link>
+
+          <div className="seller-search" ref={searchRef}>
+          <div className="search-input-wrapper">
+            <FaSearch className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search for sellers..."
+              value={sellerSearch}
+              onChange={handleSellerSearch}
+              className="search-input"
+            />
+            {isSearching && (
+              <motion.div
+                className="search-loader"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              />
+            )}
+          </div>
+          <AnimatePresence>
+            {showSearchResults && searchResults.length > 0 && (
+              <motion.div
+                className="search-results"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {searchResults.map((seller) => (
+                  <Link
+                    key={seller._id}
+                    to={`/store/${seller._id}`}
+                    className="seller-result"
+                    onClick={() => {
+                      setSellerSearch('');
+                      setShowSearchResults(false);
+                    }}
+                  >
+                    <div className="seller-info">
+                      {seller.storeImage ? (
+                        <img src={seller.storeImage} alt={seller.storeName} />
+                      ) : (
+                        <FaStore className="store-icon" />
+                      )}
+                      <div className="seller-details">
+                        <h4>{seller.storeName}</h4>
+                        <span>{seller.totalProducts} products</span>
+                      </div>
+                    </div>
+                    <div className="seller-rating">
+                      <FaStar /> {seller.rating.toFixed(1)}
+                    </div>
+                  </Link>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
           
           {/* Desktop Navigation */}
           <div className="nav">
@@ -228,6 +345,16 @@ const Header = ({ user }: PropsType) => {
                         Admin
                       </Link>
                     )}
+                    {user.role === "seller" && (
+                    <Link onClick={resetSidebar} to="/seller/dashboard">
+                      Seller Dashboard
+                    </Link>
+                  )}
+                  {user.role === "user" && (
+                    <Link onClick={resetSidebar} to="/become-seller">
+                      Become a Seller
+                    </Link>
+                  )}
                     <Link onClick={resetSidebar} to="/orders">
                       Orders
                     </Link>

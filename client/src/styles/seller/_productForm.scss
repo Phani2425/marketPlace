@@ -1,0 +1,125 @@
+.product-management {
+    @include flex(row, center, unset);
+    padding: 4rem;
+    height: calc(100% - 4rem);
+  
+    article {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 600px;
+  
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+  
+        h2 {
+          text-align: center;
+          font-size: 1.8rem;
+          color: $color4;
+          margin-bottom: 1rem;
+        }
+  
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+  
+          label {
+            font-weight: 500;
+            color: $color4;
+          }
+  
+          input, textarea {
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+  
+            &:focus {
+              outline: none;
+              border-color: $color3;
+            }
+          }
+  
+          textarea {
+            min-height: 150px;
+            resize: vertical;
+          }
+  
+          input[type="file"] {
+            padding: 0.5rem;
+            border: none;
+            background: #f8f9fa;
+  
+            &::file-selector-button {
+              padding: 0.5rem 1rem;
+              border: none;
+              border-radius: 5px;
+              background: $color3;
+              color: white;
+              cursor: pointer;
+              transition: background 0.3s ease;
+  
+              &:hover {
+                background: darken($color3, 10%);
+              }
+            }
+          }
+        }
+  
+        .preview-images {
+          display: flex;
+          gap: 1rem;
+          overflow-x: auto;
+          padding: 1rem 0;
+  
+          img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+          }
+        }
+  
+        button[type="submit"] {
+          padding: 1rem;
+          background: $color3;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-size: 1.1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+  
+          &:hover {
+            background: darken($color3, 10%);
+            transform: translateY(-2px);
+          }
+  
+          &:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+          }
+        }
+  
+        .error {
+          color: #d32f2f;
+          font-size: 0.9rem;
+          margin-top: -1rem;
+        }
+      }
+    }
+  }
+  
+  @media (max-width: $mobile) {
+    .product-management {
+      padding: 1rem;
+    }
+  }

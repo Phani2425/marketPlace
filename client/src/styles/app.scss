@@ -53,6 +53,16 @@ $color3: rgb(0, 104, 136);
 @import "admin-styles/chart";
 @import "admin-styles/dashboardapp";
 @import "admin-styles/mediaquery";
+@import "admin-styles/sellerApplication";
+
+@import "seller/dashboard";
+@import "seller/becomeSellerForm";
+@import "seller/productListing";
+@import "seller/productForm";
+@import "seller/storeView";
+@import "seller/sidebar";
+@import "seller/orders";
+@import "seller/analytics";
 
 .container {
   max-width: 1367px;
@@ -196,6 +206,8 @@ $color3: rgb(0, 104, 136);
   @include grid(1fr 4fr, 2rem);
   height: 100vh;
   background-color: rgb(247, 247, 247);
+  position: relative;
+  padding-bottom: 4rem;
   > aside {
     width: 100%;
     background-color: white;
