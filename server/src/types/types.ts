@@ -76,3 +76,49 @@ export interface NewOrderRequestBody {
   total: number;
   orderItems: OrderItemType[];
 }
+
+// Existing types...
+
+export type UserRole = "admin" | "user" | "seller";
+
+export interface StoreInfo {
+  storeName: string;
+  storeDescription: string;
+  storeImage: string;
+  storeStatus: "pending" | "approved" | "rejected";
+  storeCreatedAt: Date;
+}
+
+export interface User {
+  name: string;
+  email: string;
+  photo: string;
+  gender: string;
+  role: UserRole;
+  dob: string;
+  _id: string;
+  // Add seller specific fields
+  storeInfo?: StoreInfo;
+}
+
+// Add seller specific types
+export interface SellerStats {
+  totalProducts: number;
+  totalSales: number;
+  totalRevenue: number;
+  recentOrders: Order[];
+  topProducts: Product[];
+  monthlySales: {
+    month: string;
+    sales: number;
+  }[];
+}
+
+export interface SellerDashboardStats {
+  stats: SellerStats;
+  charts: {
+    salesByCategory: { [key: string]: number };
+    monthlyRevenue: number[];
+    orderStatus: { [key: string]: number };
+  };
+}

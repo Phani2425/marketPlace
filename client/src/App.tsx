@@ -133,6 +133,24 @@ const App = () => {
             />
           </Route>
 
+                    {/* Seller Routes */}
+                    <Route
+            element={
+              <ProtectedRoute
+                isAuthenticated={user ? true : false}
+                sellerOnly={true}
+                seller={user?.role === "seller" ? true : false}
+              />
+            }
+          >
+            <Route path="/seller/dashboard" element={<SellerDashboard />} />
+            <Route path="/seller/products" element={<SellerProducts />} />
+            <Route path="/seller/orders" element={<SellerOrders />} />
+            <Route path="/seller/profile" element={<SellerProfile />} />
+            <Route path="/seller/product/new" element={<NewProduct />} />
+            <Route path="/seller/product/:id" element={<ProductManagement />} />
+          </Route>
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
