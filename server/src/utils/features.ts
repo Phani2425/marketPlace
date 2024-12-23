@@ -103,17 +103,23 @@ export const connectDB = (uri: string) => {
 
 export const invalidateCache = async ({
   product,
-  order,
-  admin,
-  review,
-  userId,
-  orderId,
   productId,
-}: InvalidateCacheProps) => {
-  if (review) {
-    await redis.del([`reviews-${productId}`]);
-  }
-
+  seller,
+  sellerId,
+  admin,
+  order,
+  orderId,
+  userId,
+}: {
+  product?: boolean;
+  productId?: string | string[];
+  seller?: boolean;
+  sellerId?: string;
+  admin?: boolean;
+  order?: boolean;
+  orderId?: string;
+  userId?: string;
+}) => {
   if (product) {
     const productKeys: string[] = [
       "latest-products",
@@ -128,6 +134,17 @@ export const invalidateCache = async ({
 
     await redis.del(productKeys);
   }
+
+  if (seller) {
+    const sellerKeys: string[] = [
+      `seller-products-${sellerId}`,
+      `seller-stats-${sellerId}`,
+      `seller-analytics-${sellerId}`,
+    ];
+
+    await redis.del(sellerKeys);
+  }
+
   if (order) {
     const ordersKeys: string[] = [
       "all-orders",
@@ -137,6 +154,7 @@ export const invalidateCache = async ({
 
     await redis.del(ordersKeys);
   }
+
   if (admin) {
     await redis.del([
       "admin-stats",
@@ -221,4 +239,14 @@ export const getChartData = ({
   });
 
   return data;
+};
+
+export const clearSellerCache = async (sellerId: string) => {
+  const keys = [
+    `seller-products-${sellerId}`,
+    `seller-stats-${sellerId}`,
+    `seller-analytics-${sellerId}`
+  ];
+  
+  await Promise.all(keys.map(key => redis.del(key)));
 };

@@ -43,13 +43,12 @@ const categories = [
 interface PropsType {
   user: User | null;
 }
-
 interface SellerSearchResult {
   _id: string;
   storeName: string;
   storeImage?: string;
-  rating: number;
   totalProducts: number;
+  rating: number;
 }
 
 
@@ -62,7 +61,7 @@ const Header = ({ user }: PropsType) => {
 
   // Add seller search input and state
 const [sellerSearch, setSellerSearch] = useState<string>("");
-const [searchResults, setSearchResults] = useState<Array<{_id: string, storeName: string}>>([]);
+const [searchResults, setSearchResults] = useState<SellerSearchResult[]>([]);
 const [showSearchResults, setShowSearchResults] = useState(false);
 const [isSearching, setIsSearching] = useState(false);
 const searchRef = useRef<HTMLDivElement>(null);
@@ -279,43 +278,42 @@ const logoutHandler = async () => {
             )}
           </div>
           <AnimatePresence>
-            {showSearchResults && searchResults.length > 0 && (
-              <motion.div
-                className="search-results"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                {searchResults.map((seller) => (
-                  <Link
-                    key={seller._id}
-                    to={`/store/${seller._id}`}
-                    className="seller-result"
-                    onClick={() => {
-                      setSellerSearch('');
-                      setShowSearchResults(false);
-                    }}
-                  >
-                    <div className="seller-info">
-                      {seller.storeImage ? (
-                        <img src={seller.storeImage} alt={seller.storeName} />
-                      ) : (
-                        <FaStore className="store-icon" />
-                      )}
-                      <div className="seller-details">
-                        <h4>{seller.storeName}</h4>
-                        <span>{seller.totalProducts} products</span>
-                      </div>
-                    </div>
-                    <div className="seller-rating">
-                      <FaStar /> {seller.rating.toFixed(1)}
-                    </div>
-                  </Link>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+      {showSearchResults && searchResults.length > 0 && (
+        <motion.div
+          className="search-results"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          {searchResults.map((seller) => (
+            <Link
+              key={seller._id}
+              to={`/store/${seller._id}`}
+              className="seller-result"
+              onClick={() => {
+                setSellerSearch('');
+                setShowSearchResults(false);
+              }}
+            >
+              <div className="seller-info">
+                {seller.storeImage ? (
+                  <img src={seller.storeImage} alt={seller.storeName} />
+                ) : (
+                  <FaStore className="store-icon" />
+                )} <div className="seller-details">
+                <h4>{seller.storeName}</h4>
+                <span>{seller.totalProducts} products</span>
+              </div>
+            </div>
+            <div className="seller-rating">
+              <FaStar /> {(seller.rating || 0).toFixed(1)}
+            </div>
+          </Link>
+        ))}
+      </motion.div>
+    )}
+  </AnimatePresence>
         </div>
           
           {/* Desktop Navigation */}

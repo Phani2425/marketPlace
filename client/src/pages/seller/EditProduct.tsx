@@ -157,19 +157,6 @@ const EditProduct = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="category">Category</label>
-              <input
-                type="text"
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                placeholder="Enter product category"
-                required
-              />
-            </div>
-
-            <div className="form-group">
               <label>Product Photos</label>
               <input
                 type="file"

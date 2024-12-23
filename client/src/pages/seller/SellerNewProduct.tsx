@@ -1,179 +1,250 @@
-import { useFileHandler } from "6pp";
-import { FormEvent, useState } from "react";
-import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
+// src/pages/seller/SellerNewProduct.tsx
+import { FormEvent, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
+import { FaUpload, FaImage, FaCheck } from 'react-icons/fa';
 import axios from 'axios';
-import { RootState } from "../../redux/store";
-import SellerSidebar from "../../components/seller/SellerSidebar";
+import { RootState } from '../../redux/store';
+import SellerSidebar from '../../components/seller/SellerSidebar';
+
+interface FormData {
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  category: string;
+}
+
+const initialFormData: FormData = {
+  name: '',
+  description: '',
+  price: 0,
+  stock: 0,
+  category: ''
+};
+
+const categories = [
+  'Electronics',
+  'Fashion',
+  'Home & Living',
+  'Books',
+  'Sports',
+  'Beauty',
+  'Other'
+];
 
 const SellerNewProduct = () => {
-  const { user } = useSelector((state: RootState) => state.userReducer);
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useSelector((state: RootState) => state.userReducer);
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: 0,
-    stock: 0,
-    category: ""
-  });
-
-  const photos = useFileHandler("multiple", 10, 5);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
   };
 
-  const submitHandler = async (e: FormEvent<HTMLFormElement>) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    e.stopPropagation();
+    setDragActive(false);
 
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    handleFiles(files);
+  };
+
+  const handleFiles = (files: File[]) => {
+    const validFiles = files.filter(file => file.type.startsWith('image/'));
+    if (validFiles.length + photos.length > 5) {
+      toast.error('Maximum 5 images allowed');
+      return;
+    }
+    
+    setPhotos(prev => [...prev, ...validFiles]);
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!user?._id) return;
+
+    if (photos.length === 0) {
+      toast.error('Please add at least one photo');
+      return;
+    }
+
+    const formDataToSend = new FormData();
+    Object.entries(formData).forEach(([key, value]) => {
+      formDataToSend.append(key, value.toString());
+    });
+
+    photos.forEach(photo => {
+      formDataToSend.append('photos', photo);
+    });
+
+    setLoading(true);
     try {
-      const productFormData = new FormData();
-      
-      // Validate form data
-      if (!formData.name || !formData.price || formData.stock < 0 || !formData.category) {
-        return toast.error("Please fill all required fields");
-      }
-
-      if (!photos.file || photos.file.length === 0) {
-        return toast.error("Please add at least one photo");
-      }
-
-      // Append form data
-      Object.keys(formData).forEach(key => {
-        productFormData.append(key, formData[key as keyof typeof formData].toString());
-      });
-
-      // Append photos
-      photos.file.forEach(file => {
-        productFormData.append("photos", file);
-      });
-
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_SERVER}/api/v1/seller/product/new?id=${user?._id}`,
-        productFormData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
+      await axios.post(
+        `${import.meta.env.VITE_SERVER}/api/v1/seller/product/new?id=${user._id}`,
+        formDataToSend
       );
-
-      toast.success(data.message);
+      toast.success('Product added successfully');
       navigate('/seller/products');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Something went wrong");
+      toast.error(error.response?.data?.message || 'Error adding product');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
     <div className="admin-container">
       <SellerSidebar />
-      <main className="product-management">
-        <article>
-          <form onSubmit={submitHandler}>
-            <h2>Add New Product</h2>
-            
-            <div className="form-group">
-              <label htmlFor="name">Product Name</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter product name"
-                required
-              />
+      <main className="new-product">
+        <div className="form-container">
+          <h1>Add New Product</h1>
+          <form onSubmit={handleSubmit}>
+            <div className="form-grid">
+              <div className="form-group">
+                <label htmlFor="name">Product Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  value={formData.name}
+                  onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  required
+                  placeholder="Enter product name"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="category">Category</label>
+                <select
+                  id="category"
+                  value={formData.category}
+                  onChange={e => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                  required
+                >
+                  <option value="">Select category</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat.toLowerCase()}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="price">Price</label>
+                <input
+                  type="number"
+                  id="price"
+                  value={formData.price}
+                  onChange={e => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
+                  required
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="stock">Stock</label>
+                <input
+                  type="number"
+                  id="stock"
+                  value={formData.stock}
+                  onChange={e => setFormData(prev => ({ ...prev, stock: Number(e.target.value) }))}
+                  required
+                  min="0"
+                />
+              </div>
             </div>
 
             <div className="form-group">
               <label htmlFor="description">Description</label>
               <textarea
                 id="description"
-                name="description"
                 value={formData.description}
-                onChange={handleChange}
+                onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                required
+                rows={6}
                 placeholder="Enter product description"
-                required
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="price">Price</label>
-              <input
-                type="number"
-                id="price"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                placeholder="Enter price"
-                min="0"
-                required
-              />
-            </div>
+            <div className="image-upload-section">
+              <label>Product Images</label>
+              <div 
+                className={`drop-zone ${dragActive ? 'active' : ''}`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileInput}
+                  className="file-input"
+                />
+                <div className="upload-prompt">
+                  <FaUpload className="upload-icon" />
+                  <p>Drag & drop images here or click to browse</p>
+                  <span>Maximum 5 images</span>
+                </div>
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="stock">Stock</label>
-              <input
-                type="number"
-                id="stock"
-                name="stock"
-                value={formData.stock}
-                onChange={handleChange}
-                placeholder="Enter stock quantity"
-                min="0"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="category">Category</label>
-              <input
-                type="text"
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                placeholder="Enter product category"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Product Photos</label>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={photos.changeHandler}
-                required
-              />
-              {photos.error && <p className="error">{photos.error}</p>}
-              
-              {photos.preview && (
-                <div className="preview-images">
-                  {photos.preview.map((img, i) => (
-                    <img key={i} src={img} alt="Preview" />
+              {previews.length > 0 && (
+                <div className="preview-grid">
+                  {previews.map((preview, index) => (
+                    <div key={index} className="preview-item">
+                      <img src={preview} alt={`Preview ${index + 1}`} />
+                      <button 
+                        type="button"
+                        onClick={() => removePhoto(index)}
+                        className="remove-btn"
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
             </div>
 
-            <button type="submit" disabled={isLoading}>
-              {isLoading ? "Adding..." : "Add Product"}
+            <button 
+              type="submit" 
+              className="submit-btn"
+              disabled={loading}
+            >
+              {loading ? 'Adding Product...' : 'Add Product'}
             </button>
           </form>
-        </article>
+        </div>
       </main>
     </div>
   );

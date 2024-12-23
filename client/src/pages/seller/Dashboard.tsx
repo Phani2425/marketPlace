@@ -36,18 +36,20 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        if (!user?._id) return;
         const { data } = await axios.get(
-          `${server}/api/v1/seller/stats/${user?._id}`
+          `${server}/api/v1/seller/stats/${user._id}?id=${user._id}`
         );
         setStats(data.stats);
-      } catch (error) {
-        console.error(error);
+      } catch (error: any) {
+        console.error('Error fetching stats:', error);
+        toast.error(error.response?.data?.message || 'Error fetching dashboard stats');
       } finally {
         setLoading(false);
       }
     };
-
-    if (user?._id) fetchStats();
+  
+    fetchStats();
   }, [user]);
 
   return (
@@ -80,8 +82,8 @@ const Dashboard = () => {
               />
             </section>
 
-            <section className="graph-container">
-              <div className="revenue-chart">
+            <section className="charts-container">
+              <div className="chart-card">
                 <h2>Revenue & Sales Analytics</h2>
                 <BarChart
                   data_1={stats.monthlyRevenue}
@@ -94,7 +96,7 @@ const Dashboard = () => {
                 />
               </div>
 
-              <div className="category-chart">
+              <div className="chart-card">
                 <h2>Product Categories</h2>
                 <DoughnutChart
                   labels={Object.keys(stats.productCategories)}
@@ -110,32 +112,30 @@ const Dashboard = () => {
               </div>
             </section>
 
-            <section className="transaction-container">
-              <div className="recent-orders">
-                <h2>Recent Orders</h2>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Order ID</th>
-                      <th>Product</th>
-                      <th>Amount</th>
-                      <th>Status</th>
+            <section className="recent-orders">
+              <h2>Recent Orders</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Product</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recentOrders.map((order) => (
+                    <tr key={order._id}>
+                      <td>#{order._id.slice(0, 8)}</td>
+                      <td>{order.orderItems[0].name}</td>
+                      <td>₹{order.total}</td>
+                      <td className={`status ${order.status.toLowerCase()}`}>
+                        {order.status}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {stats.recentOrders.map((order) => (
-                      <tr key={order._id}>
-                        <td>#{order._id.slice(0, 8)}</td>
-                        <td>{order.orderItems[0].name}</td>
-                        <td>₹{order.total}</td>
-                        <td className={`status ${order.status.toLowerCase()}`}>
-                          {order.status}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </section>
           </>
         )}
@@ -161,7 +161,7 @@ const WidgetItem = ({ icon, title, value, color, isMoney = false }: WidgetItemPr
         <h4>{isMoney ? `₹${value}` : value}</h4>
       </div>
     </div>
-    <div className="widget-circle" style={{ background: color }} />
+
   </article>
 );
 

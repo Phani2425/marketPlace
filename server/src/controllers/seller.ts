@@ -9,7 +9,9 @@ import {
   invalidateCache,
   uploadToCloudinary,
   deleteFromCloudinary,
+  clearSellerCache
 } from "../utils/features.js";
+import mongoose from "mongoose";
 
 // Register as Seller
 export const becomeSeller = TryCatch(async (req, res, next) => {
@@ -94,90 +96,104 @@ export const updateSellerProfile = TryCatch(async (req, res, next) => {
 export const getSellerStore = TryCatch(async (req, res, next) => {
   const { id } = req.params;
 
-  if (!id) return next(new ErrorHandler("Store ID is required", 400));
-
-  try {
-    // Find seller regardless of product status but must be approved seller
-    const seller = await User.findOne({
-      _id: id,
-      role: "seller",
-      storeStatus: "approved"
-    }).select("storeName storeDescription storeImage sellerRating joinedDate totalProducts");
-
-    if (!seller) return next(new ErrorHandler("Store not found", 404));
-
-    // Get seller's approved products
-    const products = await Product.find({ 
-      seller: seller._id,
-      status: "approved" 
-    }).sort({ createdAt: -1 }); // Latest products first
-
-    return res.status(200).json({
-      success: true,
-      seller: {
-        ...seller.toObject(),
-        totalProducts: products.length
-      },
-      products
-    });
-
-  } catch (error) {
-    return next(new ErrorHandler("Invalid store identifier", 400));
+  if (!id) {
+    return next(new ErrorHandler("Store ID is required", 400));
   }
+
+  // Find the seller with store information
+  const seller = await User.findOne({
+    _id: id,
+    role: "seller",
+    storeStatus: "approved"
+  }).select("name email storeName storeDescription storeImage storeBanner sellerRating totalProducts createdAt");
+
+  if (!seller) {
+    return next(new ErrorHandler("Store not found or not approved", 404));
+  }
+
+  // Get seller's products
+  const products = await Product.find({
+    seller: id,
+    status: "approved"
+  }).sort({ createdAt: -1 });
+
+  return res.status(200).json({
+    success: true,
+    store: {
+      ...seller.toObject(),
+      products,
+      totalProducts: products.length
+    }
+  });
 });
 
 // Get Seller Products
 export const getSellerProducts = TryCatch(async (req, res, next) => {
   const { id } = req.query;
 
+  if (!id) return next(new ErrorHandler("Seller ID is required", 400));
+
   const key = `seller-products-${id}`;
-  let products = await redis.get(key);
+  let products;
 
-  if (products) {
-    products = JSON.parse(products);
-  } else {
-    products = await Product.find({ seller: id });
-    await redis.set(key, JSON.stringify(products));
+  try {
+    // Try to get from cache
+    products = await redis.get(key);
+    
+    if (products) {
+      products = JSON.parse(products);
+    } else {
+      // Fetch all products belonging to seller
+      products = await Product.find({ 
+        seller: id 
+      }).sort({ createdAt: -1 });
+
+      // Cache the results
+      await redis.setex(key, 300, JSON.stringify(products));
+    }
+
+    console.log(`Found ${products.length} products for seller ${id}`);
+
+    return res.status(200).json({
+      success: true,
+      products
+    });
+  } catch (error) {
+    console.error("Error fetching seller products:", error);
+    return next(new ErrorHandler("Error fetching products", 500));
   }
-
-  return res.status(200).json({
-    success: true,
-    products,
-  });
 });
 
 // Get Seller Stats
 export const getSellerStats = TryCatch(async (req, res, next) => {
-  const { id } = req.params;
+  const sellerId = req.params.id;
+  const userId = req.query.id;
 
-  const key = `seller-stats-${id}`;
+  if (!userId) return next(new ErrorHandler("Please login first", 401));
+
+  const user = await User.findById(userId);
+  if (!user) return next(new ErrorHandler("Invalid user ID", 401));
+  if (user.role !== "seller") 
+    return next(new ErrorHandler("Only sellers can access this resource", 403));
+
+  const key = `seller-stats-${sellerId}`;
   let stats = await redis.get(key);
 
   if (stats) {
     stats = JSON.parse(stats);
   } else {
     const [products, orders] = await Promise.all([
-      Product.find({ seller: id }),
-      Order.find({ "orderItems.seller": id }).select(
-        "total orderItems status createdAt"
-      ),
+      Product.find({ seller: sellerId }),
+      Order.find({ "orderItems.seller": sellerId })
+        .select("total orderItems status createdAt")
     ]);
 
     const totalProducts = products.length;
     const totalOrders = orders.length;
-    const totalRevenue = orders.reduce(
-      (total, order) => total + order.total,
-      0
-    );
+    const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
 
-    const monthlyRevenue = Array(12).fill(0);
-    const monthlySales = Array(12).fill(0);
-
-    orders.forEach((order) => {
-      const monthIndex = new Date(order.createdAt).getMonth();
-      monthlySales[monthIndex]++;
-      monthlyRevenue[monthIndex] += order.total;
-    });
+    const monthlyRevenue = new Array(6).fill(0);
+    const monthlySales = new Array(6).fill(0);
 
     const productCategories = products.reduce((acc, product) => {
       acc[product.category] = (acc[product.category] || 0) + 1;
@@ -191,8 +207,7 @@ export const getSellerStats = TryCatch(async (req, res, next) => {
       monthlyRevenue,
       monthlySales,
       productCategories,
-      recentOrders: orders.slice(-5),
-      topProducts: products.sort((a, b) => b.ratings - a.ratings).slice(0, 5),
+      recentOrders: orders.slice(-5)
     };
 
     await redis.setex(key, 1800, JSON.stringify(stats));
@@ -233,15 +248,21 @@ export const addProduct = TryCatch(async (req: Request, res, next) => {
     sellerName: seller.name,
   });
 
+  await clearSellerCache(seller._id);
+
   await invalidateCache({
     product: true,
     seller: true,
     sellerId: seller._id,
+    
+      admin: true
   });
+
+  
 
   return res.status(201).json({
     success: true,
-    message: "Product created successfully and pending approval",
+    message: "Product created successfully",
   });
 });
 
@@ -273,9 +294,11 @@ export const updateProduct = TryCatch(async (req, res, next) => {
   if (stock) product.stock = stock;
   if (category) product.category = category.toLowerCase();
   if (description) product.description = description;
-  product.status = "pending"; // Require re-approval after update
+  product.status = "approved"; // Require re-approval after update
 
   await product.save();
+  await clearSellerCache(seller._id);
+
   await invalidateCache({
     product: true,
     seller: true,
@@ -289,7 +312,7 @@ export const updateProduct = TryCatch(async (req, res, next) => {
   });
 });
 
-export const deleteProduct = TryCatch(async (req, res, next) => {
+export const deleteProduct = TryCatch(async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
   const seller = await User.findById(req.query.id);
 
@@ -304,6 +327,8 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
   await deleteFromCloudinary(product.photos.map((p) => p.public_id));
   await product.deleteOne();
 
+  await clearSellerCache(seller._id);
+
   await invalidateCache({
     product: true,
     seller: true,
@@ -316,7 +341,6 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
     message: "Product deleted successfully",
   });
 });
-
 
 // Get Seller Orders
 export const getSellerOrders = TryCatch(async (req, res, next) => {
@@ -342,7 +366,7 @@ export const getSellerOrders = TryCatch(async (req, res, next) => {
 });
 
 export const getSellerAnalytics = TryCatch(async (req, res, next) => {
-  const sellerId= req.params.id;
+  const sellerId = req.params.id;
   const userId = req.query.id;
 
   if (!userId) return next(new ErrorHandler("Please login first", 401));
@@ -357,8 +381,9 @@ export const getSellerAnalytics = TryCatch(async (req, res, next) => {
 
   if (analytics) {
     analytics = JSON.parse(analytics);
+    console.log(`Fetched analytics from cache for seller ${sellerId}`);
   } else {
-    // Fetch all necessary data
+    // Fetch ALL products regardless of status
     const [products, orders] = await Promise.all([
       Product.find({ seller: sellerId }),
       Order.find({ "orderItems.seller": sellerId })
@@ -366,33 +391,32 @@ export const getSellerAnalytics = TryCatch(async (req, res, next) => {
         .populate("orderItems.product", "price")
     ]);
 
-    // Calculate analytics
+    // Calculate analytics with all products
     const totalProducts = products.length;
-    
-    // Stock status
+
     const stockStatus = {
       inStock: products.filter(p => p.stock > 10).length,
       lowStock: products.filter(p => p.stock > 0 && p.stock <= 10).length,
       outOfStock: products.filter(p => p.stock === 0).length
     };
 
-    // Monthly data
-    const monthlyRevenue = new Array(6).fill(0);
-    const monthlySales = new Array(6).fill(0);
-
-    // Category distribution
     const categoryDistribution = products.reduce((acc, product) => {
       acc[product.category] = (acc[product.category] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    // Process orders
+    const monthlyRevenue = new Array(6).fill(0);
+    const monthlySales = new Array(6).fill(0);
+
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     orders.forEach(order => {
       if (order.createdAt >= sixMonthsAgo) {
-        const monthIndex = 5 - Math.floor((new Date().getTime() - order.createdAt.getTime()) / (30 * 24 * 60 * 60 * 1000));
+        const monthIndex = 5 - Math.floor(
+          (new Date().getTime() - order.createdAt.getTime()) / 
+          (30 * 24 * 60 * 60 * 1000)
+        );
         if (monthIndex >= 0) {
           monthlyRevenue[monthIndex] += order.total;
           monthlySales[monthIndex]++;
@@ -400,37 +424,8 @@ export const getSellerAnalytics = TryCatch(async (req, res, next) => {
       }
     });
 
-    // Top performing products
-    const productSales = new Map();
-    const productRevenue = new Map();
-
-    orders.forEach(order => {
-      order.orderItems.forEach(item => {
-        if (item.seller.toString() === id) {
-          productSales.set(item.name, (productSales.get(item.name) || 0) + item.quantity);
-          productRevenue.set(item.name, (productRevenue.get(item.name) || 0) + (item.price * item.quantity));
-        }
-      });
-    });
-
-    const topProducts = Array.from(productSales.entries())
-      .map(([name, sales]) => ({
-        name,
-        sales,
-        revenue: productRevenue.get(name)
-      }))
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5);
-
-    // Performance metrics
     const totalOrders = orders.length;
     const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-
-    const performanceMetrics = {
-      conversionRate: ((totalOrders / (products.length || 1)) * 100).toFixed(2),
-      averageOrderValue: totalOrders ? (totalRevenue / totalOrders).toFixed(2) : 0,
-      returnRate: 0 // You can implement actual return rate calculation if you have that data
-    };
 
     analytics = {
       totalProducts,
@@ -438,12 +433,34 @@ export const getSellerAnalytics = TryCatch(async (req, res, next) => {
       monthlyRevenue,
       monthlySales,
       categoryDistribution,
-      topProducts,
-      performanceMetrics
+      topProducts: products
+        .map(p => ({
+          name: p.name,
+          sales: orders.filter(o => 
+            o.orderItems.some(item => 
+              item.product.toString() === p._id.toString()
+            )
+          ).length,
+          revenue: orders.reduce((sum, o) => {
+            const orderItem = o.orderItems.find(
+              item => item.product.toString() === p._id.toString()
+            );
+            return sum + (orderItem ? orderItem.price * orderItem.quantity : 0);
+          }, 0),
+          photo: p.photos[0]?.url // Include the photo URL
+        }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5),
+      performanceMetrics: {
+        conversionRate: ((totalOrders / (totalProducts || 1)) * 100).toFixed(2),
+        averageOrderValue: totalOrders ? (totalRevenue / totalOrders).toFixed(2) : 0,
+        returnRate: 0
+      }
     };
 
-    // Cache the analytics
+    // Cache analytics for 1 hour
     await redis.setex(key, 3600, JSON.stringify(analytics));
+    console.log(`Fetched analytics from DB for seller ${sellerId}`);
   }
 
   return res.status(200).json({
@@ -480,4 +497,37 @@ export const searchSellers = TryCatch(async (req, res, next) => {
       success: true,
       sellers,
     });
+  });
+
+  export const getSingleProduct = TryCatch(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    const key = `product-${id}`;
+  
+    let product;
+  
+    try {
+      // Try to get from cache
+      product = await redis.get(key);
+      
+      if (product) {
+        product = JSON.parse(product);
+        console.log(`Fetched product from cache for ID ${id}`);
+      } else {
+        // Fetch product from database
+        product = await Product.findById(id);
+        if (!product) return next(new ErrorHandler("Product not found", 404));
+  
+        // Cache the result
+        await redis.setex(key, 300, JSON.stringify(product));
+        console.log(`Fetched product from DB for ID ${id}`);
+      }
+  
+      return res.status(200).json({
+        success: true,
+        product
+      });
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      return next(new ErrorHandler("Error fetching product", 500));
+    }
   });

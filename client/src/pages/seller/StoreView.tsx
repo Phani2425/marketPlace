@@ -4,11 +4,13 @@ import { motion, AnimatePresence, Variants } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { 
-  FaStar, FaStore, FaShareAlt, FaMapMarkerAlt, 
-  FaCalendarAlt, FaBox, FaTag, FaSearch 
+  FaStar, FaStore, FaShareAlt, 
+  FaCalendarAlt, FaBox, FaSearch 
 } from 'react-icons/fa';
 import { Skeleton } from '../../components/loader';
 import ProductCard from '../../components/product-card';
+import {useSelector} from 'react-redux'
+import { RootState } from '@reduxjs/toolkit/query';
 
 // Animation variants
 const containerVariants: Variants = {
@@ -34,10 +36,10 @@ const itemVariants: Variants = {
 };
 
 interface Store {
-  _id: string;
   storeName: string;
   storeDescription: string;
   storeImage: string;
+  storeBanner: string;
   sellerRating: number;
   totalProducts: number;
   joinedDate: string;
@@ -52,23 +54,36 @@ interface Product {
   photos: { url: string }[];
 }
 
+
+
 const StoreView = () => {
-  const { storeId } = useParams();
+
+
+  const { id } = useParams();
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
   const [showShareTooltip, setShowShareTooltip] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useSelector((state: RootState) => state.userReducer);
+
+  const isStoreOwner = user?._id === id;
+
+  useEffect(() => {
+    console.log('StoreView Mounted');
+    console.log('Store ID:', id);
+  }, []);
 
   useEffect(() => {
     const fetchStoreDetails = async () => {
       try {
         const { data } = await axios.get(
-          `${import.meta.env.VITE_SERVER}/api/v1/seller/store/${storeId}`
+          `${import.meta.env.VITE_SERVER}/api/v1/seller/store/${id}`
         );
-        setStore(data.seller);
-        setProducts(data.products);
+
+        setStore(data.store);
+        setProducts(data.store.products || []);
       } catch (error: any) {
         toast.error(error.response?.data?.message || 'Error fetching store details');
       } finally {
@@ -76,8 +91,8 @@ const StoreView = () => {
       }
     };
 
-    if (storeId) fetchStoreDetails();
-  }, [storeId]);
+    if (id) fetchStoreDetails();
+  }, [id]);
 
   const categories = ['All', ...new Set(products.map(p => p.category))];
   
@@ -96,10 +111,48 @@ const StoreView = () => {
     toast.success('Store link copied!');
   };
 
+
+  const stats = [
+    { 
+      icon: FaStar, 
+      text: `${store?.sellerRating?.toFixed(1) || '0.0'} Rating`,
+      value: true // Always show rating
+    },
+    { 
+      icon: FaBox, 
+      text: `${store?.totalProducts || 0} Products`,
+      value: true // Always show products count
+    },
+    { 
+      icon: FaCalendarAlt, 
+      text: `Joined ${store?.joinedDate ? 
+        new Date(store.joinedDate).toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric'
+        }) : 
+        'Recently'}`,
+      value: true 
+    }
+  ];
+
   if (loading) return <Skeleton length={20} />;
+
+  if (!store) return <div>Store not found</div>;
 
   return (
     <div className="store-view">
+
+{store?.storeBanner && (
+        <motion.div 
+          className="store-banner"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <img src={store.storeBanner} alt="Store Banner" />
+        </motion.div>
+      )}
+
       <motion.div 
         className="store-hero"
         initial={{ opacity: 0, y: -20 }}
@@ -128,29 +181,21 @@ const StoreView = () => {
               {store?.storeName}
             </motion.h1>
 
-            <motion.div 
-              className="store-stats"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              {[
-                { icon: FaStar, text: `${store?.sellerRating?.toFixed(1)} Rating` },
-                { icon: FaBox, text: `${store?.totalProducts} Products` },
-                { icon: FaCalendarAlt, text: `Joined ${new Date(store?.joinedDate || '').toLocaleDateString()}` },
-                { icon: FaMapMarkerAlt, text: 'India' }
-              ].map((stat, index) => (
-                <motion.div 
-                  key={index}
-                  className="stat"
-                  variants={itemVariants}
-                  whileHover={{ y: -5, scale: 1.05 }}
-                >
-                  <stat.icon />
-                  <span>{stat.text}</span>
-                </motion.div>
-              ))}
-            </motion.div>
+            <div className="store-stats">
+        {stats.map((stat, index) => (
+          <motion.div 
+            key={index}
+            className="stat"
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            // Remove whileHover animation that caused bouncing
+          >
+            <stat.icon className="stat-icon" /> 
+            <span>{stat.text}</span>
+          </motion.div>
+        ))}
+      </div>
 
             <motion.p 
               className="store-description"
@@ -161,27 +206,29 @@ const StoreView = () => {
               {store?.storeDescription}
             </motion.p>
 
-            <motion.button
-              className="share-btn"
-              onClick={handleShare}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <FaShareAlt />
-              Share Store
-              <AnimatePresence>
-                {showShareTooltip && (
-                  <motion.span 
-                    className="tooltip"
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                  >
-                    Link copied!
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
+            {isStoreOwner && (
+        <motion.button
+          className="share-btn"
+          onClick={handleShare}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <FaShareAlt />
+          Share Store
+          <AnimatePresence>
+            {showShareTooltip && (
+              <motion.span 
+                className="tooltip"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                Link copied!
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.button>
+      )}
           </div>
         </div>
       </motion.div>
@@ -240,7 +287,7 @@ const StoreView = () => {
                 <p>Try a different search or category</p>
               </motion.div>
             ) : (
-              filteredProducts.map((product, index) => (
+              filteredProducts.map((product, _) => (
                 <motion.div
                   key={product._id}
                   variants={itemVariants}

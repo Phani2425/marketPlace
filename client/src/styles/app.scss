@@ -1,8 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.5;
-  font-weight: 400;
 }
+
+
+// :root {
+//   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+//   line-height: 1.5;
+//   font-weight: 400;
+// }
 
 * {
   margin: 0;
@@ -63,6 +71,9 @@ $color3: rgb(0, 104, 136);
 @import "seller/sidebar";
 @import "seller/orders";
 @import "seller/analytics";
+@import "modal";
+@import "dragDropImageUpload";
+@import "singleImageDrop";
 
 .container {
   max-width: 1367px;
@@ -203,41 +214,23 @@ $color3: rgb(0, 104, 136);
 }
 
 .admin-container {
-  @include grid(1fr 4fr, 2rem);
-  height: 100vh;
-  background-color: rgb(247, 247, 247);
+  display: flex; // Change from grid to flex
+  min-height: 100vh;
+  background-color: #f7f7f7;
   position: relative;
-  padding-bottom: 4rem;
-  > aside {
-    width: 100%;
-    background-color: white;
-    padding: 1rem;
-    z-index: 10;
-    overflow-y: auto;
-    &::-webkit-scrollbar {
-      display: none;
-    }
 
-    > div {
-      margin: 2rem 1rem;
-      > h5 {
-        @include heading(2px);
-        opacity: 0.8;
-        margin: 1rem 0;
-      }
-      > ul {
-        @include flex(column, unset, unset, 0.5rem);
-        list-style: none;
-        > li {
-          padding: 0.5rem 1rem;
-          border-radius: 10px;
-          a {
-            color: rgba(0, 0, 0, 0.825);
-            @include flex(row, unset);
-          }
-        }
-      }
-    }
+  > aside {
+    width: 20rem;
+    flex-shrink: 0;
+  }
+
+  > main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 2rem;
+    overflow: auto;
   }
 }
 

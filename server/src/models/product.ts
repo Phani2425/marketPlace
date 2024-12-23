@@ -48,7 +48,7 @@ const schema = new mongoose.Schema(
     },
         // Add seller related fields
         seller: {
-          type: mongoose.Schema.Types.ObjectId,
+          type: String,
           ref: "User",
           required: [true, "Please specify the seller"],
         },
@@ -66,7 +66,7 @@ const schema = new mongoose.Schema(
         },
         isApproved: {
           type: Boolean,
-          default: false
+          default: true
         },
         approvedAt: {
           type: Date
@@ -74,7 +74,7 @@ const schema = new mongoose.Schema(
         status: {
           type: String,
           enum: ["pending", "approved", "rejected"],
-          default: "pending"
+          default: "approved"
         }
   },
   {
@@ -91,6 +91,7 @@ schema.virtual('storeUrl').get(function() {
 });
 
 // Add index for better search performance
+schema.index({ seller: 1 }); 
 schema.index({ seller: 1, status: 1 });
 schema.index({ category: 1, status: 1 });
 schema.index({ name: 'text', description: 'text' });

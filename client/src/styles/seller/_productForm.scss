@@ -1,125 +1,204 @@
-.product-management {
-    @include flex(row, center, unset);
-    padding: 4rem;
-    height: calc(100% - 4rem);
-  
-    article {
-      background: white;
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 600px;
-  
-      form {
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
-  
-        h2 {
-          text-align: center;
-          font-size: 1.8rem;
-          color: $color4;
-          margin-bottom: 1rem;
+// src/styles/seller/_newProduct.scss
+.new-product {
+  flex: 1;
+  padding: 2rem;
+  background: #f8f9fa;
+  min-height: 100vh;
+
+  .form-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    padding: 3rem 6rem;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+    h1 {
+      font-size: 2rem;
+      color: $color4;
+      margin-bottom: 2.5rem;
+      text-align: center;
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        border-radius: 3px;
+      }
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+
+      label {
+        font-weight: 500;
+        color: $color4;
+      }
+
+      input, select, textarea {
+        padding: 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+
+        &:focus {
+          outline: none;
+          border-color: $color3;
+          box-shadow: 0 0 0 4px rgba($color3, 0.1);
         }
-  
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-  
-          label {
-            font-weight: 500;
-            color: $color4;
-          }
-  
-          input, textarea {
-            padding: 0.8rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-  
-            &:focus {
-              outline: none;
-              border-color: $color3;
-            }
-          }
-  
-          textarea {
-            min-height: 150px;
-            resize: vertical;
-          }
-  
-          input[type="file"] {
-            padding: 0.5rem;
-            border: none;
-            background: #f8f9fa;
-  
-            &::file-selector-button {
-              padding: 0.5rem 1rem;
-              border: none;
-              border-radius: 5px;
-              background: $color3;
-              color: white;
-              cursor: pointer;
-              transition: background 0.3s ease;
-  
-              &:hover {
-                background: darken($color3, 10%);
-              }
-            }
-          }
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 150px;
+      }
+    }
+
+    .image-upload-section {
+      margin-bottom: 2rem;
+
+      .drop-zone {
+        position: relative;
+        padding: 3rem;
+        border: 2px dashed #e0e0e0;
+        border-radius: 12px;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+        cursor: pointer;
+
+        &.active {
+          border-color: $color3;
+          background: rgba($color3, 0.05);
         }
-  
-        .preview-images {
-          display: flex;
-          gap: 1rem;
-          overflow-x: auto;
-          padding: 1rem 0;
-  
-          img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 8px;
-          }
-        }
-  
-        button[type="submit"] {
-          padding: 1rem;
-          background: $color3;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-size: 1.1rem;
-          font-weight: 600;
+
+        .file-input {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
           cursor: pointer;
-          transition: all 0.3s ease;
-  
-          &:hover {
-            background: darken($color3, 10%);
-            transform: translateY(-2px);
+        }
+
+        .upload-prompt {
+          text-align: center;
+
+          .upload-icon {
+            font-size: 2.5rem;
+            color: $color3;
+            margin-bottom: 1rem;
           }
-  
-          &:disabled {
-            background: #bdc3c7;
-            cursor: not-allowed;
-            transform: none;
+
+          p {
+            font-size: 1.1rem;
+            color: $color4;
+            margin-bottom: 0.5rem;
+          }
+
+          span {
+            font-size: 0.9rem;
+            color: #666;
           }
         }
-  
-        .error {
-          color: #d32f2f;
-          font-size: 0.9rem;
-          margin-top: -1rem;
+      }
+
+      .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+
+        .preview-item {
+          position: relative;
+          border-radius: 8px;
+          overflow: hidden;
+          aspect-ratio: 1;
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+
+          .remove-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #ef4444;
+            cursor: pointer;
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: white;
+              transform: scale(1.1);
+            }
+          }
         }
       }
     }
-  }
-  
-  @media (max-width: $mobile) {
-    .product-management {
+
+    .submit-btn {
+      width: 100%;
       padding: 1rem;
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.25);
+      }
+
+      &:disabled {
+        background: #e5e7eb;
+        cursor: not-allowed;
+      }
     }
   }
+
+  @media (max-width: $mobile) {
+    padding: 1rem;
+
+    .form-container {
+      padding: 1.5rem;
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
+  }
+}

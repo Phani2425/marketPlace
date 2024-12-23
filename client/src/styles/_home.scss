@@ -30,157 +30,152 @@
     transition: transform 0.3s ease, color 0.3s ease;
 
     &:hover {
-      transform: scale(1.05);
       color: darken($color1, 10%); // Ensure the logo color darkens on hover
     }
   }
 
-  .seller-search {
-    position: relative;
-    flex: 1;
-    max-width: 400px;
-    margin: 0 2rem;
-  
-    .search-input-wrapper {
+
+    .seller-search {
       position: relative;
+      max-width: 500px; // Reduced from 600px
       width: 100%;
+      margin: 0 1.5rem; // Reduced from 2rem
   
-      .search-icon {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 1.1rem;
-      }
-  
-      .search-loader {
-        position: absolute;
-        right: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 20px;
-        height: 20px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top-color: white;
-        border-radius: 50%;
-      }
-  
-      input {
+      .search-input-wrapper {
+        position: relative;
         width: 100%;
-        padding: 0.8rem 2.8rem;
-        border: 2px solid transparent;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        transition: all 0.3s ease;
   
-        &::placeholder {
-          color: rgba(255, 255, 255, 0.7);
-        }
+        .search-input {
+          width: 100%;
+          padding: 0.7rem 2.5rem; // Reduced padding
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 8px; // Reduced from 12px
+          color: white;
+          font-size: 0.9rem; // Reduced from 0.95rem
+          transition: all 0.3s ease;
   
-        &:focus {
-          outline: none;
-          background: white;
-          color: $color4;
-          border-color: $color3;
+          &::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+          }
   
-          & + .search-icon {
-            color: $color3;
+          &:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
           }
         }
+  
+        .search-icon {
+          position: absolute;
+          left: 0.8rem; // Adjusted position
+          top: 50%;
+          transform: translateY(-50%);
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 0.9rem; // Reduced size
+          pointer-events: none;
+        }
       }
-    }
   
-    .search-results {
-      position: absolute;
-      top: calc(100% + 0.5rem);
-      left: 0;
-      right: 0;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-      max-height: 400px;
-      overflow-y: auto;
-      z-index: 1000;
+      .search-results {
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        max-height: 320px; // Reduced from 400px
+        overflow-y: auto;
+        padding: 0.3rem;
+        z-index: 1000;
   
-      .seller-result {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 1rem;
-        border-bottom: 1px solid #eee;
-        transition: all 0.3s ease;
-  
-        &:last-child {
-          border-bottom: none;
+        &::-webkit-scrollbar {
+          width: 6px; // Thinner scrollbar
         }
   
-        &:hover {
-          background: #f8f9fa;
-          transform: translateX(5px);
+        &::-webkit-scrollbar-track {
+          background: transparent;
         }
   
-        .seller-info {
+        &::-webkit-scrollbar-thumb {
+          background: rgba($color3, 0.15);
+          border-radius: 3px;
+        }
+  
+        .seller-result {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          justify-content: space-between;
+          padding: 0.6rem 0.8rem; // Reduced padding
+          border-radius: 6px;
+          transition: all 0.2s ease;
+          text-decoration: none;
+          margin-bottom: 0.2rem; // Reduced margin
   
-          img, .store-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
+          &:last-child {
+            margin-bottom: 0;
           }
   
-          .store-icon {
-            padding: 8px;
-            background: #f0f0f0;
-            color: $color3;
+          &:hover {
+            background: #f8f9fa;
           }
   
-          .seller-details {
-            h4 {
-              color: $color4;
-              margin: 0;
+          .seller-info {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem; // Reduced gap
+  
+            img, .store-icon {
+              width: 32px; // Reduced from 48px
+              height: 32px; // Reduced from 48px
+              border-radius: 6px;
+              object-fit: cover;
+            }
+  
+            .store-icon {
+              padding: 0.4rem;
+              background: #f8f9fa;
+              color: $color3;
               font-size: 1rem;
             }
   
-            span {
-              color: #6c757d;
-              font-size: 0.9rem;
+            .seller-details {
+              h4 {
+                color: $color4;
+                font-size: 0.9rem; // Reduced from 1rem
+                font-weight: 500;
+                margin-bottom: 0.2rem; // Reduced margin
+              }
+  
+              span {
+                color: #666;
+                font-size: 0.8rem; // Reduced from 0.9rem
+              }
+            }
+          }
+  
+          .seller-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+            padding: 0.3rem 0.8rem;
+            background: rgba($color3, 0.08);
+            border-radius: 50px;
+            color: $color3;
+            font-weight: 500;
+            font-size: 0.8rem; // Reduced from 0.9rem
+  
+            svg {
+              font-size: 0.8rem;
+              color: #ffc107;
             }
           }
         }
-  
-        .seller-rating {
-          display: flex;
-          align-items: center;
-          gap: 0.3rem;
-          color: #ffc107;
-          font-weight: 500;
-        }
-      }
-  
-      &::-webkit-scrollbar {
-        width: 8px;
-      }
-  
-      &::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 8px;
-      }
-  
-      &::-webkit-scrollbar-thumb {
-        background: $color3;
-        border-radius: 8px;
-  
-        &:hover {
-          background: darken($color3, 10%);
-        }
       }
     }
-  }
+  
+
   
   @media (max-width: 768px) {
     .seller-search {
@@ -335,6 +330,7 @@
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  height: fit-content; // Change from fixed height to fit-content
 
   h2 {
     @include heading(2px);
@@ -347,6 +343,27 @@
     @include flex(column, flex-start, stretch);
     list-style: none;
     gap: 0.75rem;
+    max-height: 70vh; // Add max-height
+    overflow-y: auto; // Add scrollbar if content exceeds max-height
+    padding-right: 0.5rem; // Add padding for scrollbar
+
+    // Customize scrollbar
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba($color3, 0.2);
+      border-radius: 3px;
+
+      &:hover {
+        background: rgba($color3, 0.3);
+      }
+    }
 
     li {
       a {
@@ -364,6 +381,17 @@
           transform: translateX(5px);
         }
       }
+    }
+  }
+
+  // Mobile styles
+  &.mobile {
+    width: 100%;
+    margin-bottom: 1rem;
+
+    ul {
+      max-height: none;
+      overflow-y: visible;
     }
   }
 }

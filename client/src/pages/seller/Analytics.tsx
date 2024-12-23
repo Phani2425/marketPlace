@@ -26,6 +26,7 @@ interface AnalyticsData {
     name: string;
     sales: number;
     revenue: number;
+    photo: string; // Include the photo property
   }>;
   performanceMetrics: {
     conversionRate: number;
@@ -38,20 +39,7 @@ const Analytics = () => {
   const { user } = useSelector((state: RootState) => state.userReducer);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'revenue' | 'products' | 'insights'>('revenue');
-  const [analytics, setAnalytics] = useState<AnalyticsData>({
-    dailyRevenue: [],
-    dailySales: [],
-    monthlyRevenue: [],
-    monthlySales: [],
-    categoryDistribution: {},
-    stockStatus: { inStock: 0, lowStock: 0, outOfStock: 0 },
-    topProducts: [],
-    performanceMetrics: {
-      conversionRate: 0,
-      averageOrderValue: 0,
-      returnRate: 0
-    }
-  });
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -72,6 +60,14 @@ const Analytics = () => {
 
     if (user?._id) fetchAnalytics();
   }, [user]);
+
+  if (loading) {
+    return <Skeleton length={20} />;
+  }
+
+  if (!analytics) {
+    return <div>No analytics data available</div>;
+  }
 
   return (
     <div className="admin-container">
@@ -98,124 +94,121 @@ const Analytics = () => {
           </div>
         </div>
 
-        {loading ? (
-          <Skeleton length={20} />
-        ) : (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="analytics-content"
-            >
-              {activeTab === 'revenue' && (
-                <div className="revenue-analytics">
-                  <section className="chart-section">
-                    <h2>Revenue Trends</h2>
-                    <LineChart
-                      data={analytics.monthlyRevenue}
-                      label="Monthly Revenue"
-                      backgroundColor="rgba(53, 162, 235, 0.5)"
-                      borderColor="rgb(53, 162, 235)"
-                      labels={months}
-                    />
-                  </section>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="analytics-content"
+          >
+            {activeTab === 'revenue' && (
+              <div className="revenue-analytics">
+                <section className="chart-section">
+                  <h2>Revenue Trends</h2>
+                  <LineChart
+                    data={analytics.monthlyRevenue}
+                    label="Monthly Revenue"
+                    backgroundColor="rgba(53, 162, 235, 0.5)"
+                    borderColor="rgb(53, 162, 235)"
+                    labels={months}
+                  />
+                </section>
 
-                  <section className="chart-section">
-                    <h2>Sales Performance</h2>
-                    <BarChart
-                      data_1={analytics.monthlySales}
-                      data_2={analytics.monthlyRevenue}
-                      title_1="Sales"
-                      title_2="Revenue"
-                      bgColor_1="rgb(75, 192, 192)"
-                      bgColor_2="rgb(53, 162, 235)"
-                      labels={months}
-                    />
-                  </section>
+                <section className="chart-section">
+                  <h2>Sales Performance</h2>
+                  <BarChart
+                    data_1={analytics.monthlySales}
+                    data_2={analytics.monthlyRevenue}
+                    title_1="Sales"
+                    title_2="Revenue"
+                    bgColor_1="rgb(75, 192, 192)"
+                    bgColor_2="rgb(53, 162, 235)"
+                    labels={months}
+                  />
+                </section>
+              </div>
+            )}
+
+            {activeTab === 'products' && (
+              <div className="product-analytics">
+                <section className="chart-section">
+                  <h2>Category Distribution</h2>
+                  <DoughnutChart
+                    labels={Object.keys(analytics.categoryDistribution)}
+                    data={Object.values(analytics.categoryDistribution)}
+                    backgroundColor={[
+                      'rgb(255, 99, 132)',
+                      'rgb(54, 162, 235)',
+                      'rgb(255, 206, 86)',
+                      'rgb(75, 192, 192)',
+                      'rgb(153, 102, 255)'
+                    ]}
+                  />
+                </section>
+
+                <section className="chart-section">
+                  <h2>Stock Status</h2>
+                  <DoughnutChart
+                    labels={['In Stock', 'Low Stock', 'Out of Stock']}
+                    data={[
+                      analytics.stockStatus.inStock,
+                      analytics.stockStatus.lowStock,
+                      analytics.stockStatus.outOfStock
+                    ]}
+                    backgroundColor={[
+                      'rgb(75, 192, 192)',
+                      'rgb(255, 206, 86)',
+                      'rgb(255, 99, 132)'
+                    ]}
+                  />
+                </section>
+              </div>
+            )}
+
+            {activeTab === 'insights' && (
+              <div className="performance-insights">
+                <div className="metrics-grid">
+                  {Object.entries(analytics.performanceMetrics).map(([key, value]) => (
+                    <motion.div
+                      key={key}
+                      className="metric-card"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <h3>{key.replace(/([A-Z])/g, ' $1').trim()}</h3>
+                      <p>{typeof value === 'number' ? `${value.toFixed(2)}%` : value}</p>
+                    </motion.div>
+                  ))}
                 </div>
-              )}
 
-              {activeTab === 'products' && (
-                <div className="product-analytics">
-                  <section className="chart-section">
-                    <h2>Category Distribution</h2>
-                    <DoughnutChart
-                      labels={Object.keys(analytics.categoryDistribution)}
-                      data={Object.values(analytics.categoryDistribution)}
-                      backgroundColor={[
-                        'rgb(255, 99, 132)',
-                        'rgb(54, 162, 235)',
-                        'rgb(255, 206, 86)',
-                        'rgb(75, 192, 192)',
-                        'rgb(153, 102, 255)'
-                      ]}
-                    />
-                  </section>
-
-                  <section className="chart-section">
-                    <h2>Stock Status</h2>
-                    <DoughnutChart
-                      labels={['In Stock', 'Low Stock', 'Out of Stock']}
-                      data={[
-                        analytics.stockStatus.inStock,
-                        analytics.stockStatus.lowStock,
-                        analytics.stockStatus.outOfStock
-                      ]}
-                      backgroundColor={[
-                        'rgb(75, 192, 192)',
-                        'rgb(255, 206, 86)',
-                        'rgb(255, 99, 132)'
-                      ]}
-                    />
-                  </section>
-                </div>
-              )}
-
-              {activeTab === 'insights' && (
-                <div className="performance-insights">
-                  <div className="metrics-grid">
-                    {Object.entries(analytics.performanceMetrics).map(([key, value]) => (
+                <section className="top-products">
+                  <h2>Top Performing Products</h2>
+                  <div className="products-grid">
+                    {analytics.topProducts.map((product, index) => (
                       <motion.div
-                        key={key}
-                        className="metric-card"
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.3 }}
+                        key={product.name}
+                        className="product-card"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
                       >
-                        <h3>{key.replace(/([A-Z])/g, ' $1').trim()}</h3>
-                        <p>{typeof value === 'number' ? `${value.toFixed(2)}%` : value}</p>
+                        <img src={product.photo} alt={product.name} className="product-photo" />
+                        <div className="product-info">
+                          <h3>{product.name}</h3>
+                          <p>Sales: {product.sales}</p>
+                          <p>Revenue: ₹{product.revenue}</p>
+                        </div>
                       </motion.div>
                     ))}
                   </div>
-
-                  <section className="top-products">
-                    <h2>Top Performing Products</h2>
-                    <div className="products-grid">
-                      {analytics.topProducts.map((product, index) => (
-                        <motion.div
-                          key={product.name}
-                          className="product-card"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                        >
-                          <h3>{product.name}</h3>
-                          <div className="stats">
-                            <p>Sales: {product.sales}</p>
-                            <p>Revenue: ₹{product.revenue}</p>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </section>
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        )}
+                </section>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );

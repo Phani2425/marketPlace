@@ -77,6 +77,17 @@ const schema = new mongoose.Schema(
       enum: ["pending", "approved", "rejected"],
       default: "pending"
     },
+    storeBanner: {
+      type: String
+    },
+    sellerRating: {
+      type: Number,
+      default: 0
+    },
+    totalProducts: {
+      type: Number,
+      default: 0
+    },
     storeCreatedAt: {
       type: Date
     }
