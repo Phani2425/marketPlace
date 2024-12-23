@@ -41,7 +41,7 @@ const Dashboard = () => {
           `${server}/api/v1/seller/stats/${user._id}?id=${user._id}`
         );
         setStats(data.stats);
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error fetching stats:', error);
         toast.error(error.response?.data?.message || 'Error fetching dashboard stats');
       } finally {
@@ -152,7 +152,7 @@ interface WidgetItemProps {
   isMoney?: boolean;
 }
 
-const WidgetItem = ({ icon, title, value, color, isMoney = false }: WidgetItemProps) => (
+const WidgetItem = ({ icon, title, value, isMoney = false }: WidgetItemProps) => (
   <article className="widget">
     <div className="widget-info">
       {icon}

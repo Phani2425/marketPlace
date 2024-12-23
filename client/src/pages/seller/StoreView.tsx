@@ -84,7 +84,7 @@ const StoreView = () => {
 
         setStore(data.store);
         setProducts(data.store.products || []);
-      } catch (error: any) {
+      } catch (error) {
         toast.error(error.response?.data?.message || 'Error fetching store details');
       } finally {
         setLoading(false);
@@ -287,7 +287,7 @@ const StoreView = () => {
                 <p>Try a different search or category</p>
               </motion.div>
             ) : (
-              filteredProducts.map((product, _) => (
+              filteredProducts.map((product) => (
                 <motion.div
                   key={product._id}
                   variants={itemVariants}

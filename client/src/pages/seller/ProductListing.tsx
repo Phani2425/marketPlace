@@ -35,9 +35,8 @@ const ProductListing = () => {
       const { data } = await axios.get(
         `${import.meta.env.VITE_SERVER}/api/v1/seller/products?id=${user?._id}`
       );
-      console.log('Fetched products:', data.products); // Add debug logging
       setProducts(data.products);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching products:', error);
       toast.error(error.response?.data?.message || 'Error fetching products');
     } finally {
@@ -54,7 +53,7 @@ const ProductListing = () => {
       );
       toast.success('Product deleted successfully');
       fetchProducts();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting product:', error);
       toast.error(error.response?.data?.message || 'Error deleting product');
     } finally {

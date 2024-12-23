@@ -50,7 +50,7 @@ const Analytics = () => {
         if (data.success) {
           setAnalytics(data.analytics);
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error fetching analytics:', error);
         toast.error(error.response?.data?.message || 'Error fetching analytics');
       } finally {

@@ -3,7 +3,7 @@ import { FormEvent, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { FaUpload, FaImage, FaCheck } from 'react-icons/fa';
+import { FaUpload } from 'react-icons/fa';
 import axios from 'axios';
 import { RootState } from '../../redux/store';
 import SellerSidebar from '../../components/seller/SellerSidebar';
@@ -115,7 +115,7 @@ const SellerNewProduct = () => {
       );
       toast.success('Product added successfully');
       navigate('/seller/products');
-    } catch (error: any) {
+    } catch (error) {
       toast.error(error.response?.data?.message || 'Error adding product');
     } finally {
       setLoading(false);
