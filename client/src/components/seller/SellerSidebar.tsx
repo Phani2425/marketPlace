@@ -6,45 +6,71 @@ import {
   RiShoppingBag3Fill,
   RiAddCircleFill
 } from "react-icons/ri";
-import { FaBox, FaChartLine, FaStore } from "react-icons/fa";
+import { FaBox, FaChartLine, FaStore, FaBars,FaTimes} from "react-icons/fa";
 import {useSelector} from 'react-redux'
+import { RootState } from '../../redux/store';
 
 const SellerSidebar = () => {
   const location = useLocation();
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [phoneActive, setPhoneActive] = useState<boolean>(
-    window.innerWidth < 1100
-  );
+  const [phoneActive, setPhoneActive] = useState<boolean>(window.innerWidth < 1100);
 
-  const resizeHandler = () => {
-    setPhoneActive(window.innerWidth < 1100);
+  const toggleSidebar = () => {
+    setShowModal(prev => !prev);
+  };
+
+  const closeSidebar = () => {
+    setShowModal(false);
   };
 
   useEffect(() => {
-    window.addEventListener("resize", resizeHandler);
-    return () => {
-      window.removeEventListener("resize", resizeHandler);
+    const resizeHandler = () => {
+      setPhoneActive(window.innerWidth < 1100);
+      if (window.innerWidth >= 1100) {
+        setShowModal(false);
+      }
     };
+
+    window.addEventListener("resize", resizeHandler);
+    return () => window.removeEventListener("resize", resizeHandler);
   }, []);
 
   return (
-    <aside
-      style={
-        phoneActive
-          ? {
-              width: "20rem",
-              height: "100vh",
-              position: "fixed",
-              top: 0,
-              left: showModal ? "0" : "-20rem",
-              transition: "all 0.5s",
-            }
-          : {}
-      }
-    >
-      <h2>Seller Panel</h2>
-      <DivOne location={location} />
-    </aside>
+    <>
+      {phoneActive && (
+        <button className="toggle-sidebar" onClick={toggleSidebar}>
+          <FaBars />
+        </button>
+      )}
+      <aside
+        style={
+          phoneActive
+            ? {
+                width: "20rem",
+                height: "100vh",
+                position: "fixed",
+                top: 0,
+                left: showModal ? "0" : "-20rem",
+                transition: "all 0.5s",
+                zIndex: 1000,
+              }
+            : {}
+        }
+      >
+        <div className="sidebar-header">
+          <h2>Seller Panel</h2>
+          {phoneActive && (
+            <button className="close-btn" onClick={closeSidebar}>
+              <FaTimes />
+            </button>
+          )}
+        </div>
+        <DivOne location={location} />
+      </aside>
+      {showModal && phoneActive && (
+        <div className="sidebar-overlay" onClick={closeSidebar} />
+      )}
+    </>
   );
 };
 

@@ -7,7 +7,7 @@ import { toast } from 'react-hot-toast';
 import { RootState } from '../../redux/store';
 import SellerSidebar from '../../components/seller/SellerSidebar';
 import { Skeleton } from '../../components/loader';
-import { FaBox, FaClock, FaShippingFast, FaCheckCircle } from 'react-icons/fa';
+import {  FaClock, FaShippingFast, FaCheckCircle } from 'react-icons/fa';
 
 interface Order {
   _id: string;

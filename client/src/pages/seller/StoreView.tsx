@@ -9,8 +9,11 @@ import {
 } from 'react-icons/fa';
 import { Skeleton } from '../../components/loader';
 import ProductCard from '../../components/product-card';
-import {useSelector} from 'react-redux'
-import { RootState } from '@reduxjs/toolkit/query';
+import {useSelector,useDispatch} from 'react-redux'
+import { RootState } from '../../redux/store';
+import {CartItem} from '../../types/types.js';
+import {Product} from '../../types/types.js';
+import {addToCart} from '../../redux/reducer/cartReducer';
 
 // Animation variants
 const containerVariants: Variants = {
@@ -45,14 +48,8 @@ interface Store {
   joinedDate: string;
 }
 
-interface Product {
-  _id: string;
-  name: string;
-  price: number;
-  stock: number;
-  category: string;
-  photos: { url: string }[];
-}
+
+
 
 
 
@@ -70,6 +67,14 @@ const StoreView = () => {
 
   const isStoreOwner = user?._id === id;
 
+  const dispatch = useDispatch();
+
+  const addToCartHandler = (cartItem: CartItem) => {
+    if (cartItem.stock < 1) return toast.error("Out of Stock");
+    dispatch(addToCart(cartItem));
+    toast.success("Added to cart");
+  };
+
   useEffect(() => {
     console.log('StoreView Mounted');
     console.log('Store ID:', id);
@@ -82,10 +87,17 @@ const StoreView = () => {
           `${import.meta.env.VITE_SERVER}/api/v1/seller/store/${id}`
         );
 
+        
+
         setStore(data.store);
         setProducts(data.store.products || []);
       } catch (error) {
-        toast.error(error.response?.data?.message || 'Error fetching store details');
+        if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data?.message || 'Error fetching store details');
+        } else {
+          toast.error('Error fetching store details');
+        }
+       
       } finally {
         setLoading(false);
       }
@@ -298,7 +310,11 @@ const StoreView = () => {
                     name={product.name}
                     price={product.price}
                     stock={product.stock}
-                    photos={product.photos}
+                    handler={addToCartHandler}
+                    photos={product.photos.map(photo => ({
+                      url: photo.url,
+                      public_id: photo.public_id
+                    }))}
                   />
                 </motion.div>
               ))

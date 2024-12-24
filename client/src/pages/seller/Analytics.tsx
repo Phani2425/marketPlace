@@ -8,6 +8,7 @@ import { Skeleton } from '../../components/loader';
 import axios from 'axios';
 import { getLastMonths } from '../../utils/features';
 import { FaChartLine, FaChartPie, FaChartBar } from 'react-icons/fa';
+import toast from 'react-hot-toast'
 
 const { last6Months: months } = getLastMonths();
 
@@ -51,8 +52,11 @@ const Analytics = () => {
           setAnalytics(data.analytics);
         }
       } catch (error) {
-        console.error('Error fetching analytics:', error);
-        toast.error(error.response?.data?.message || 'Error fetching analytics');
+        if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data?.message || 'Error fetching analytics');
+        } else {
+          toast.error('Error fetching analytics');
+        }
       } finally {
         setLoading(false);
       }

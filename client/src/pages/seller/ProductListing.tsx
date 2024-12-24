@@ -37,8 +37,11 @@ const ProductListing = () => {
       );
       setProducts(data.products);
     } catch (error) {
-      console.error('Error fetching products:', error);
-      toast.error(error.response?.data?.message || 'Error fetching products');
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || 'something went wrong');
+      } else {
+        toast.error('Error fetching products');
+      }
     } finally {
       setLoading(false);
     }
@@ -54,8 +57,12 @@ const ProductListing = () => {
       toast.success('Product deleted successfully');
       fetchProducts();
     } catch (error) {
-      console.error('Error deleting product:', error);
-      toast.error(error.response?.data?.message || 'Error deleting product');
+      if (axios.isAxiosError(error)) {
+
+        toast.error(error.response?.data?.message || 'something went wrong');
+      } else {
+        toast.error('Error deleting product:');
+      }
     } finally {
       setIsModalOpen(false);
       setSelectedProductId(null);

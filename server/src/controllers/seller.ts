@@ -2,7 +2,8 @@ import { Request } from "express";
 import { TryCatch } from "../middlewares/error.js";
 import { Product } from "../models/product.js";
 import { User } from "../models/user.js";
-import { Order } from "../models/order.js";
+import {Order} from "../models/order.js";
+import { Orders } from '../types/types.js';
 import ErrorHandler from "../utils/utility-class.js";
 import { redis } from "../app.js";
 import {
@@ -12,6 +13,8 @@ import {
   clearSellerCache
 } from "../utils/features.js";
 import mongoose from "mongoose";
+import { SellerStats, RecentOrder, OrderItem } from '../types/types.js';
+import { SellerAnalytics } from '../types/types.js';
 
 // Register as Seller
 export const becomeSeller = TryCatch(async (req, res, next) => {
@@ -80,8 +83,8 @@ export const updateSellerProfile = TryCatch(async (req, res, next) => {
   if (storeDescription) seller.storeDescription = storeDescription;
 
   if (storeImage) {
-    const result = await uploadToCloudinary(storeImage);
-    seller.storeImage = result.url;
+    const result = await uploadToCloudinary([storeImage]);
+    seller.storeImage = result[0].url;
   }
 
   await seller.save();
@@ -177,10 +180,11 @@ export const getSellerStats = TryCatch(async (req, res, next) => {
     return next(new ErrorHandler("Only sellers can access this resource", 403));
 
   const key = `seller-stats-${sellerId}`;
-  let stats = await redis.get(key);
+  let stats: SellerStats;
+  let cachedStats  = await redis.get(key);
 
-  if (stats) {
-    stats = JSON.parse(stats);
+  if (cachedStats) {
+    stats = JSON.parse(cachedStats) as SellerStats;
   } else {
     const [products, orders] = await Promise.all([
       Product.find({ seller: sellerId }),
@@ -200,14 +204,25 @@ export const getSellerStats = TryCatch(async (req, res, next) => {
       return acc;
     }, {} as Record<string, number>);
 
-    stats = {
+     stats = {
       totalProducts,
       totalOrders,
       totalRevenue,
       monthlyRevenue,
       monthlySales,
       productCategories,
-      recentOrders: orders.slice(-5)
+      recentOrders: orders.slice(-5).map(order => ({
+        _id: order._id.toString(),
+        total: order.total,
+        orderItems: order.orderItems.map(item => ({
+          name: item.name || '',
+          price: item.price || 0,
+          quantity: item.quantity || 0,
+          productId: item.productId?.toString() || ''
+        })) as OrderItem[],
+        status: order.status,
+        createdAt: order.createdAt
+      })) as RecentOrder[]
     };
 
     await redis.setex(key, 1800, JSON.stringify(stats));
@@ -312,7 +327,7 @@ export const updateProduct = TryCatch(async (req, res, next) => {
   });
 });
 
-export const deleteProduct = TryCatch(async (req: Request, res: Response, next: NextFunction) => {
+export const deleteProduct = TryCatch(async (req, res, next) => {
   const { id } = req.params;
   const seller = await User.findById(req.query.id);
 
@@ -347,15 +362,16 @@ export const getSellerOrders = TryCatch(async (req, res, next) => {
   const { id } = req.query;
 
   const key = `seller-orders-${id}`;
-  let orders = await redis.get(key);
+  let orders: Orders[];
+  let cachedorders= await redis.get(key);
 
-  if (orders) {
-    orders = JSON.parse(orders);
+  if (cachedorders) {
+    orders = JSON.parse(cachedorders) as Orders[];
   } else {
     orders = await Order.find({ "orderItems.seller": id }).populate(
       "user",
       "name email"
-    );
+    ).lean();
     await redis.set(key, JSON.stringify(orders));
   }
 
@@ -377,10 +393,11 @@ export const getSellerAnalytics = TryCatch(async (req, res, next) => {
     return next(new ErrorHandler("Only sellers can access this resource", 403));
 
   const key = `seller-analytics-${sellerId}`;
-  let analytics = await redis.get(key);
+  let analytics:SellerAnalytics;
+  let cachedanalytics= await redis.get(key);
 
-  if (analytics) {
-    analytics = JSON.parse(analytics);
+  if (cachedanalytics) {
+    analytics = JSON.parse(cachedanalytics) as SellerAnalytics;
     console.log(`Fetched analytics from cache for seller ${sellerId}`);
   } else {
     // Fetch ALL products regardless of status
@@ -433,24 +450,22 @@ export const getSellerAnalytics = TryCatch(async (req, res, next) => {
       monthlyRevenue,
       monthlySales,
       categoryDistribution,
-      topProducts: products
-        .map(p => ({
-          name: p.name,
-          sales: orders.filter(o => 
-            o.orderItems.some(item => 
-              item.product.toString() === p._id.toString()
-            )
-          ).length,
-          revenue: orders.reduce((sum, o) => {
-            const orderItem = o.orderItems.find(
-              item => item.product.toString() === p._id.toString()
-            );
-            return sum + (orderItem ? orderItem.price * orderItem.quantity : 0);
-          }, 0),
-          photo: p.photos[0]?.url // Include the photo URL
-        }))
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 5),
+      topProducts: products.map(p => ({
+        name: p.name,
+        sales: orders.filter(o => 
+          o.orderItems.some(item => 
+            item.productId?.toString() === p._id.toString()
+          )
+        ).length,
+        revenue: orders.reduce((sum, o) => {
+          const orderItem = o.orderItems.find(
+            item => item.productId?.toString() === p._id.toString()
+          );
+          
+return sum + (orderItem && orderItem.price && orderItem.quantity ? orderItem.price * orderItem.quantity : 0);
+        }, 0),
+        photo: p.photos[0]?.url
+      })).sort((a, b) => b.revenue - a.revenue).slice(0, 5),
       performanceMetrics: {
         conversionRate: ((totalOrders / (totalProducts || 1)) * 100).toFixed(2),
         averageOrderValue: totalOrders ? (totalRevenue / totalOrders).toFixed(2) : 0,
@@ -476,19 +491,19 @@ export const searchSellers = TryCatch(async (req, res, next) => {
     if (!query) return next(new ErrorHandler("Search query is required", 400));
   
     const key = `seller-search-${query}`;
-    let sellers = await redis.get(key);
+    let sellers:string | null = await redis.get(key);
   
     if (sellers) {
       sellers = JSON.parse(sellers);
     } else {
-      sellers = await User.find({
+      sellers = JSON.stringify(await User.find({
         role: "seller",
         storeStatus: "approved",
         $or: [
           { storeName: { $regex: query, $options: "i" } },
           { storeDescription: { $regex: query, $options: "i" } }
         ]
-      }).select("_id storeName storeImage").limit(10);
+      }).select("_id storeName storeImage").limit(10));
   
       await redis.setex(key, 600, JSON.stringify(sellers));
     }
@@ -499,7 +514,7 @@ export const searchSellers = TryCatch(async (req, res, next) => {
     });
   });
 
-  export const getSingleProduct = TryCatch(async (req: Request, res: Response, next: NextFunction) => {
+  export const getSingleProduct = TryCatch(async (req, res, next) => {
     const { id } = req.params;
     const key = `product-${id}`;
   

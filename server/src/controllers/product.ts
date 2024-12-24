@@ -316,7 +316,7 @@ export const newReview = TryCatch(async (req, res, next) => {
     product: true,
     productId: String(product._id),
     admin: true,
-    review: true,
+    
   });
 
   return res.status(alreadyReviewed ? 200 : 201).json({

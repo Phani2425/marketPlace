@@ -7,6 +7,7 @@ import axios from 'axios';
 import SellerSidebar from '../../components/seller/SellerSidebar';
 import { FaBox, FaMoneyBillWave, FaShoppingCart } from 'react-icons/fa';
 import { getLastMonths } from '../../utils/features';
+import toast from 'react-hot-toast'
 
 const { last6Months: months } = getLastMonths();
 
@@ -42,8 +43,11 @@ const Dashboard = () => {
         );
         setStats(data.stats);
       } catch (error) {
-        console.error('Error fetching stats:', error);
-        toast.error(error.response?.data?.message || 'Error fetching dashboard stats');
+        if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data?.message || 'Error fetching dashboard stats');
+        } else {
+          toast.error('Error fetching dashboard stats');
+        }
       } finally {
         setLoading(false);
       }

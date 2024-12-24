@@ -54,6 +54,55 @@ aside {
       }
     }
   }
+
+  // In styles/seller/_sidebar.scss
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.toggle-sidebar {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  background: $color3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.8rem;
+  cursor: pointer;
+  z-index: 998;
+  display: none;
+
+  @media (max-width: 1100px) {
+    display: block;
+  }
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  .close-btn {
+    background: none;
+    border: none;
+    color: $color4;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    
+    &:hover {
+      color: $color3;
+    }
+  }
+}
   
   @media (max-width: 1100px) {
     aside {

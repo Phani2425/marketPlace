@@ -87,7 +87,11 @@ const EditProduct = () => {
       toast.success(data.message);
       navigate('/seller/products');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Something went wrong');
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || 'something went wrong');
+      } else {
+        toast.error('Error fetching analytics');
+      }
     } finally {
       setIsLoading(false);
     }

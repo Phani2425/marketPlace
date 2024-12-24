@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { Document } from 'mongoose';
 
 export interface NewUserRequestBody {
   name: string;
@@ -101,24 +102,71 @@ export interface User {
   storeInfo?: StoreInfo;
 }
 
-// Add seller specific types
-export interface SellerStats {
-  totalProducts: number;
-  totalSales: number;
-  totalRevenue: number;
-  recentOrders: Order[];
-  topProducts: Product[];
-  monthlySales: {
-    month: string;
-    sales: number;
-  }[];
+
+export interface OrderItem {
+  name: string;
+  price: number;
+  quantity: number;
+  productId: string;
 }
 
+export interface Orders extends Document {
+  _id: string;
+  total: number;
+  orderItems: OrderItem[];
+  status: "Processing" | "Shipped" | "Delivered";
+  createdAt: Date;
+  user: {
+    name: string;
+    email: string;
+  };
+}
+
+export interface RecentOrder {
+  _id: string;
+  total: number;
+  orderItems: OrderItem[];
+  status: "Processing" | "Shipped" | "Delivered";
+  createdAt: Date;
+}
+
+export interface SellerStats {
+  totalProducts: number;
+  totalOrders: number;
+  totalRevenue: number;
+  monthlyRevenue: number[];
+  monthlySales: number[];
+  productCategories: Record<string, number>;
+  recentOrders: RecentOrder[];
+}
 export interface SellerDashboardStats {
   stats: SellerStats;
   charts: {
     salesByCategory: { [key: string]: number };
     monthlyRevenue: number[];
     orderStatus: { [key: string]: number };
+  };
+}
+
+export interface SellerAnalytics {
+  totalProducts: number;
+  stockStatus: {
+    inStock: number;
+    lowStock: number;
+    outOfStock: number;
+  };
+  monthlyRevenue: number[];
+  monthlySales: number[];
+  categoryDistribution: Record<string, number>;
+  topProducts: Array<{
+    name: string;
+    sales: number;
+    revenue: number;
+    photo?: string;
+  }>;
+  performanceMetrics: {
+    conversionRate: string;
+    averageOrderValue: string|number;
+    returnRate: number;
   };
 }

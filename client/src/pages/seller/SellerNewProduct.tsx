@@ -116,7 +116,12 @@ const SellerNewProduct = () => {
       toast.success('Product added successfully');
       navigate('/seller/products');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Error adding product');
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || 'Error adding product');
+      } else {
+        toast.error('Error adding product');
+      }
+     
     } finally {
       setLoading(false);
     }

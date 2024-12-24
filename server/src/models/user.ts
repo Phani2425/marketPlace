@@ -17,6 +17,7 @@ interface IUser extends Document {
   storeImage?: string;
   storeStatus: "pending" | "approved" | "rejected";
   storeCreatedAt?: Date;
+  age: number;
 }
 
 const schema = new mongoose.Schema(
@@ -33,7 +34,10 @@ const schema = new mongoose.Schema(
       type: String,
       unique: [true, "Email already Exists"],
       required: [true, "Please enter Email"],
-      validate: validator.isEmail,
+      validate: {
+        validator: (value: string) => validator.isEmail(value),
+        message: 'Invalid email address'
+      }
     },
     photo: {
       type: String,
@@ -105,20 +109,19 @@ schema.pre("save", function(next) {
 });
 
 
-schema.virtual("age").get(function () {
+schema.virtual('age').get(function(this: IUser) {
   const today = new Date();
-  const dob = this.dob;
-  let age = today.getFullYear() - dob.getFullYear();
-
-  if (
-    today.getMonth() < dob.getMonth() ||
-    (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())
-  ) {
+  const birthDate = this.dob;
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
-
   return age;
 });
+
+schema.set('toJSON', { virtuals: true });
+schema.set('toObject', { virtuals: true });
 
 export const User = mongoose.model<IUser>("User", schema);
 

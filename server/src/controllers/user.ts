@@ -85,7 +85,7 @@ export const newUser = TryCatch(
       });
 
     } catch (error) {
-      if (error.code === 11000) {
+      if (error instanceof Error && 'code' in error && error.code === 11000) {
         return next(new ErrorHandler("Email already exists", 400));
       }
       console.error("User creation error:", error);

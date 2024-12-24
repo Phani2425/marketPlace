@@ -37,7 +37,11 @@ const SellerApplications = () => {
       );
       setApplications(data.applications);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Error fetching applications');
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || 'Error fetching applications');
+      } else {
+        toast.error('Error fetching applications');
+      }
     } finally {
       setLoading(false);
     }
@@ -54,7 +58,11 @@ const SellerApplications = () => {
       toast.success(`Seller ${status} successfully`);
       fetchApplications();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update status');
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || 'Error fetching applications');
+      } else {
+        toast.error('Error fetching applications');
+      }
     } finally {
       setActionLoading(prev => ({ ...prev, [sellerId]: false }));
     }

@@ -288,10 +288,13 @@ export const getPieCharts = TryCatch(async (req, res, next) => {
       marketingCost,
     };
 
-    const usersAgeGroup = {
-      teen: allUsers.filter((i) => i.age < 20).length,
-      adult: allUsers.filter((i) => i.age >= 20 && i.age < 40).length,
-      old: allUsers.filter((i) => i.age >= 40).length,
+    const userAgeGroups = {
+      teen: allUsers.filter((i) => i.toObject().age < 20).length,
+      adult: allUsers.filter((i) => {
+        const age = i.toObject().age;
+        return age >= 20 && age < 40;
+      }).length,
+      old: allUsers.filter((i) => i.toObject().age >= 40).length,
     };
 
     const adminCustomer = {
@@ -304,7 +307,7 @@ export const getPieCharts = TryCatch(async (req, res, next) => {
       productCategories,
       stockAvailablity,
       revenueDistribution,
-      usersAgeGroup,
+      usersAgeGroup:userAgeGroups,
       adminCustomer,
     };
 
