@@ -5,6 +5,7 @@ import { Order } from "../models/order.js";
 import { NewOrderRequestBody } from "../types/types.js";
 import { invalidateCache, reduceStock } from "../utils/features.js";
 import ErrorHandler from "../utils/utility-class.js";
+import { Product } from "../models/product.js";
 
 export const myOrders = TryCatch(async (req, res, next) => {
   const { id: user } = req.query;
@@ -81,9 +82,20 @@ export const newOrder = TryCatch(
     if (!shippingInfo || !orderItems || !user || !subtotal || !tax || !total)
       return next(new ErrorHandler("Please Enter All Fields", 400));
 
+    const orderItemsWithSeller = await Promise.all(
+      orderItems.map(async (item) => {
+        const product = await Product.findById(item.productId).populate("seller");
+        if (!product) throw new ErrorHandler("Product not found", 404);
+        return {
+          ...item,
+          seller: product.seller,
+        };
+      })
+    );
+
     const order = await Order.create({
       shippingInfo,
-      orderItems,
+      orderItems: orderItemsWithSeller,
       user,
       subtotal,
       tax,

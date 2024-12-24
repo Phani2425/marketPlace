@@ -16,6 +16,7 @@ interface IUser extends Document {
   storeDescription?: string;
   storeImage?: string;
   storeStatus: "pending" | "approved" | "rejected";
+  storeBanner?: string; 
   storeCreatedAt?: Date;
   age: number;
 }

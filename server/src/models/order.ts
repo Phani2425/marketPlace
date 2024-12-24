@@ -67,6 +67,10 @@ const schema = new mongoose.Schema(
           type: mongoose.Types.ObjectId,
           ref: "Product",
         },
+        seller: {
+          type: String, 
+          ref: "User",
+        },
       },
     ],
   },

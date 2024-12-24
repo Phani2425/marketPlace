@@ -45,8 +45,8 @@ const Search = () => {
   const handleFilterChange = (type: string, value: string | number) => {
     switch (type) {
       case 'sort':
-      setSort(value as string);
-      updateActiveFilters('Sort', sortOptions.find(opt => opt.value === value)?.label || value);
+      setSort(String(value));
+      updateActiveFilters('Sort', sortOptions.find(opt => opt.value === String(value))?.label || String(value));
       break;
       case 'category':
         setCategory(value as string);

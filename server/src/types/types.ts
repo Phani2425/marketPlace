@@ -1,6 +1,19 @@
 import { NextFunction, Request, Response } from "express";
 import { Document } from 'mongoose';
 
+
+export type SearchRequestQuery = {
+  search?: string;
+  sort?: string;
+  category?: string;
+  price?: string;
+  page?: string;
+  order?: string;
+};
+
+export type SearchRequest = Request<{}, {}, {}, SearchRequestQuery>;
+
+
 export interface NewUserRequestBody {
   name: string;
   email: string;
@@ -24,13 +37,6 @@ export type ControllerType = (
   next: NextFunction
 ) => Promise<void | Response<any, Record<string, any>>>;
 
-export type SearchRequestQuery = {
-  search?: string;
-  price?: string;
-  category?: string;
-  sort?: string;
-  page?: string;
-};
 
 export interface BaseQuery {
   name?: {
@@ -171,11 +177,4 @@ export interface SellerAnalytics {
   };
 }
 
-export interface SearchRequestQuery extends Request {
-  search?: string;
-  sort?: string;
-  category?: string;
-  price?: string;
-  page?: string;
-  order?: string;
-}
+

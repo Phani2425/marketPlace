@@ -1,4 +1,4 @@
-import { Request } from "express";
+import { Request, Response, NextFunction } from "express";
 import { redis, redisTTL } from "../app.js";
 import { TryCatch } from "../middlewares/error.js";
 import { Product } from "../models/product.js";
@@ -8,6 +8,7 @@ import {
   BaseQuery,
   NewProductRequestBody,
   SearchRequestQuery,
+  SearchRequest
 } from "../types/types.js";
 import {
   deleteFromCloudinary,
@@ -19,7 +20,7 @@ import ErrorHandler from "../utils/utility-class.js";
 // import { faker } from "@faker-js/faker";
 
 // Revalidate on New,Update,Delete Product & on New Order
-export const getlatestProducts = TryCatch(async (req, res, next) => {
+export const getlatestProducts = TryCatch(async (req: Request<{}, {}, {}, SearchRequestQuery>, res: Response, next: NextFunction) => {
   let products;
 
   products = await redis.get("latest-products");
@@ -193,7 +194,7 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
 
 // In server/src/controllers/product.ts
 export const getAllProducts = TryCatch(
-  async (req: Request<{}, {}, {}, SearchRequestQuery>, res, next) => {
+  async (req: Request<{}, {}, {}, SearchRequestQuery>, res: Response, next: NextFunction) => {
     const { search, sort, category, price, order } = req.query;
 
     const page = Number(req.query.page) || 1;
@@ -349,6 +350,21 @@ export const deleteReview = TryCatch(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     message: "Review Deleted",
+  });
+});
+
+export const getRelatedProducts = TryCatch(async (req, res, next) => {
+  const { category } = req.query;
+
+  if (!category) {
+    return next(new ErrorHandler("Category is required", 400));
+  }
+
+  const products = await Product.find({ category }).limit(10);
+
+  return res.status(200).json({
+    success: true,
+    products,
   });
 });
 

@@ -11,11 +11,14 @@ import {
   newProduct,
   newReview,
   updateProduct,
+  getRelatedProducts
 } from "../controllers/product.js";
 import { adminOnly } from "../middlewares/auth.js";
 import { mutliUpload } from "../middlewares/multer.js";
 
 const app = express.Router();
+
+app.get("/related", getRelatedProducts);
 
 //To Create New Product  - /api/v1/product/new
 app.post("/new", adminOnly, mutliUpload, newProduct);

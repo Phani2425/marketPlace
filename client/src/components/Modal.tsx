@@ -7,6 +7,7 @@ interface ModalProps {
   onConfirm: () => void;
   title: string;
   message: string;
+  children?: React.ReactNode;
 }
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, title, message }) => {

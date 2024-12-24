@@ -18,6 +18,7 @@ interface SellerApplication {
   storeStatus: 'pending' | 'approved' | 'rejected';
   createdAt: string;
   storeImage?: string;
+  storeCreatedAt?: string;
 }
 
 const formatDate = (dateString: string) => {

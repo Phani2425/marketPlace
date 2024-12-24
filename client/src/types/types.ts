@@ -21,6 +21,8 @@ export type Product = {
     public_id: string;
   }[];
   _id: string;
+  oldPrice?: number;
+  discount?: number;
 };
 
 export type Review = {
@@ -33,6 +35,7 @@ export type Review = {
     _id: string;
   };
   _id: string;
+  createdAt: string; 
 };
 
 export type ShippingInfo = {
@@ -43,14 +46,16 @@ export type ShippingInfo = {
   pinCode: string;
 };
 
-export type CartItem = {
+export interface CartItem {
   productId: string;
-  photo: string;
   name: string;
   price: number;
-  quantity: number;
   stock: number;
-};
+  quantity: number;
+  photo: string;
+}
+
+
 export type OrderItem = Omit<CartItem, "stock"> & { _id: string };
 
 export type Order = {

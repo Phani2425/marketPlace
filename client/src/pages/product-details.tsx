@@ -7,7 +7,7 @@ import { FaArrowLeftLong, FaArrowRightLong, FaRegStar, FaStar, FaShare } from "r
 import { FiEdit, FiPackage, FiShield, FiTruck } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useParams,useNavigate } from "react-router-dom";
 import { Skeleton } from "../components/loader";
 import RatingsComponent from "../components/ratings";
 import {
@@ -27,6 +27,19 @@ const ProductDetails = () => {
   const params = useParams();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.userReducer);
+  const navigate = useNavigate();
+
+  const handleBuyNow = () => {
+    addToCartHandler({
+      productId: data?.product?._id|| "",
+      name: data?.product?.name|| "",
+      price: data?.product?.price|| 0,
+      stock: data?.product?.stock|| 0,
+      quantity,
+      photo: data?.product?.photos[0].url || "",
+    });
+    navigate('/pay'); // Navigate to the checkout page
+  };
 
   const { isLoading, isError, data } = useProductDetailsQuery(params.id!);
   const reviewsResponse = useAllReviewsOfProductsQuery(params.id!);
@@ -89,6 +102,11 @@ const ProductDetails = () => {
     },
   });
 
+  const closeReviewDialog = () => {
+    setReviewComment("");
+    reviewDialogRef.current?.close();
+  };
+
   const handleReviewSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setReviewSubmitLoading(true);
@@ -101,7 +119,7 @@ const ProductDetails = () => {
     });
 
     responseToast(res, null, "");
-    reviewCloseHandler();
+    closeReviewDialog();
     setReviewSubmitLoading(false);
   };
 
@@ -207,10 +225,10 @@ const ProductDetails = () => {
                   className="add-to-cart"
                   onClick={() =>
                     addToCartHandler({
-                      productId: data?.product?._id,
-                      name: data?.product?.name,
-                      price: data?.product?.price,
-                      stock: data?.product?.stock,
+                      productId: data?.product?._id || "",
+                      name: data?.product?.name || "",
+                      price: data?.product?.price || 0,
+                      stock: data?.product?.stock || 0,
                       quantity,
                       photo: data?.product?.photos[0].url || "",
                     })
@@ -218,7 +236,7 @@ const ProductDetails = () => {
                 >
                   <FaShoppingCart /> Add to Cart
                 </button>
-                <button className="buy-now">Buy Now</button>
+                <button className="buy-now" onClick={handleBuyNow}>Buy Now</button>
               </div>
 
               <div className="product-features">

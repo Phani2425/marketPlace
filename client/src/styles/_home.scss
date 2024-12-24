@@ -405,6 +405,19 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  height: 400px; // Set a fixed height for the banner
+  width: 100%;
+
+  .slider-container {
+    width: 100%;
+    height: 100%;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover; // This ensures the image covers the entire space
+    }
+  }
 }
 
 .section-title {

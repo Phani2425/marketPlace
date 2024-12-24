@@ -23,6 +23,7 @@ const OrderDetails = lazy(() => import("./pages/order-details"));
 const NotFound = lazy(() => import("./pages/not-found"));
 const Checkout = lazy(() => import("./pages/checkout"));
 
+
 // Admin Routes Importing
 const Dashboard = lazy(() => import("./pages/admin/dashboard"));
 const Products = lazy(() => import("./pages/admin/products"));
@@ -57,6 +58,7 @@ const EditProduct = lazy(() => import("./pages/seller/EditProduct"));
 const StoreView = lazy(() => import("./pages/seller/StoreView"));
 const SellerOrders = lazy(() => import("./pages/seller/Orders"));
 const SellerAnalytics = lazy(() => import ("./pages/seller/Analytics"));
+
 
 const App = () => {
   const { user, loading } = useSelector(

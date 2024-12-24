@@ -405,16 +405,14 @@ export const getSellerOrders = TryCatch(async (req, res, next) => {
   const { id } = req.query;
 
   const key = `seller-orders-${id}`;
-  let orders: Orders[];
-  let cachedorders= await redis.get(key);
+  let orders;
+  let cachedOrders = await redis.get(key);
 
-  if (cachedorders) {
-    orders = JSON.parse(cachedorders) as Orders[];
+  if (cachedOrders) {
+
+    orders = JSON.parse(cachedOrders);
   } else {
-    orders = await Order.find({ "orderItems.seller": id }).populate(
-      "user",
-      "name email"
-    ).lean();
+    orders = await Order.find({ "orderItems.seller": id }).populate("user", "name email").lean();
     await redis.set(key, JSON.stringify(orders));
   }
 
@@ -448,7 +446,7 @@ export const getSellerAnalytics = TryCatch(async (req, res, next) => {
       Product.find({ seller: sellerId }),
       Order.find({ "orderItems.seller": sellerId })
         .select("orderItems total createdAt status")
-        .populate("orderItems.product", "price")
+        .populate("orderItems.productId", "price")
     ]);
 
     // Calculate analytics with all products

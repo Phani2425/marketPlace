@@ -25,8 +25,8 @@ interface SkeletonProps {
   className?: string;
   width?: string;
   length?: number;
-  height?: string;
-  containerHeight?: string;
+  height?: string | number;
+  count?: number; 
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({ className, ...props }) => {
