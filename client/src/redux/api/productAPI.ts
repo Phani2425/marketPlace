@@ -32,24 +32,32 @@ export const productAPI = createApi({
     categories: builder.query<CategoriesResponse, string>({
       query: () => `categories`,
       providesTags: ["product"],
-    }),
-
-    searchProducts: builder.query<
-      SearchProductsResponse,
-      SearchProductsRequest
-    >({
-      query: ({ price, search, sort, category, page }) => {
-        let base = `all?search=${search}&page=${page}`;
-
-        if (price) base += `&price=${price}`;
-        if (sort) base += `&sort=${sort}`;
-        if (category) base += `&category=${category}`;
-
-        return base;
-      },
+    }),    relatedProducts: builder.query<AllProductsResponse, string>({
+      query: (category) => `related?category=${category}`,
       providesTags: ["product"],
     }),
 
+   // In src/redux/api/productAPI.ts
+searchProducts: builder.query<SearchProductsResponse, SearchProductsRequest>({
+  query: ({ price, search, sort, category, page }) => {
+    let base = `all?search=${search}&page=${page}`;
+
+    if (price) base += `&price=${price}`;
+    if (sort) {
+      if (sort === "rating") {
+        base += `&sort=ratings`;
+      } else if (sort === "newest") {
+        base += `&sort=createdAt`;
+      } else {
+        base += `&sort=price&order=${sort}`;
+      }
+    }
+    if (category) base += `&category=${category}`;
+
+    return base;
+  },
+  providesTags: ["product"],
+}),
     productDetails: builder.query<ProductResponse, string>({
       query: (id) => id,
       providesTags: ["product"],
@@ -120,4 +128,5 @@ export const {
   useProductDetailsQuery,
   useUpdateProductMutation,
   useDeleteProductMutation,
+  useRelatedProductsQuery
 } = productAPI;

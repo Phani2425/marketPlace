@@ -170,3 +170,12 @@ export interface SellerAnalytics {
     returnRate: number;
   };
 }
+
+export interface SearchRequestQuery extends Request {
+  search?: string;
+  sort?: string;
+  category?: string;
+  price?: string;
+  page?: string;
+  order?: string;
+}
