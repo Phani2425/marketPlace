@@ -15,34 +15,75 @@ import {
 import mongoose from "mongoose";
 import { SellerStats, RecentOrder, OrderItem } from '../types/types.js';
 import { SellerAnalytics } from '../types/types.js';
+import { upload } from "../middlewares/multer.js";
 
-// Register as Seller
+
 export const becomeSeller = TryCatch(async (req, res, next) => {
   const { storeName, storeDescription } = req.body;
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
   const userId = req.query.id;
+
+  // Validate inputs
+  if (!storeName || !storeDescription) {
+    return next(new ErrorHandler("Please provide all required fields", 400));
+  }
 
   const user = await User.findById(userId);
   if (!user) return next(new ErrorHandler("User not found", 404));
 
-  if (user.role === "seller")
+  if (user.role === "seller") {
     return next(new ErrorHandler("Already a seller", 400));
+  }
 
+  // Check for existing store name
   const existingStore = await User.findOne({ storeName });
-  if (existingStore)
+  if (existingStore) {
     return next(new ErrorHandler("Store name already exists", 400));
+  }
 
-  user.role = "seller";
-  user.storeName = storeName;
-  user.storeDescription = storeDescription;
-  user.storeStatus = "pending";
+  try {
+    let storeImageURL, storeBannerURL;
 
-  await user.save();
-  await invalidateCache({ admin: true });
+    // Handle store image
+    if (files.storeImage) {
+      const storeImageResult = await uploadToCloudinary([files.storeImage[0]]);
+      storeImageURL = storeImageResult[0].url;
+    }
 
-  return res.status(200).json({
-    success: true,
-    message: "Store registration request submitted successfully",
-  });
+    // Handle store banner
+    if (files.storeBanner) {
+      const storeBannerResult = await uploadToCloudinary([files.storeBanner[0]]);
+      storeBannerURL = storeBannerResult[0].url;
+    }
+
+    // Update user document
+    user.role = "seller";
+    user.storeName = storeName;
+    user.storeDescription = storeDescription;
+    user.storeStatus = "pending";
+    user.storeCreatedAt = new Date(); // Add this line
+    if (storeImageURL) user.storeImage = storeImageURL;
+    if (storeBannerURL) user.storeBanner = storeBannerURL;
+
+    await user.save();
+    await invalidateCache({ admin: true });
+
+    return res.status(200).json({
+      success: true,
+      message: "Store registration request submitted successfully",
+    });
+  } catch (error) {
+    // Clean up any uploaded images if there's an error
+    const filesToDelete = [];
+    if (files.storeImage) filesToDelete.push(files.storeImage[0].filename);
+    if (files.storeBanner) filesToDelete.push(files.storeBanner[0].filename);
+    
+    if (filesToDelete.length > 0) {
+      await deleteFromCloudinary(filesToDelete);
+    }
+    
+    return next(new ErrorHandler("Error processing store registration", 500));
+  }
 });
 
 // Get Seller Profile
@@ -108,7 +149,9 @@ export const getSellerStore = TryCatch(async (req, res, next) => {
     _id: id,
     role: "seller",
     storeStatus: "approved"
-  }).select("name email storeName storeDescription storeImage storeBanner sellerRating totalProducts createdAt");
+  }).select(
+    "name email storeName storeDescription storeImage storeBanner sellerRating totalProducts storeCreatedAt createdAt"
+  );
 
   if (!seller) {
     return next(new ErrorHandler("Store not found or not approved", 404));
@@ -503,7 +546,7 @@ export const searchSellers = TryCatch(async (req, res, next) => {
           { storeName: { $regex: query, $options: "i" } },
           { storeDescription: { $regex: query, $options: "i" } }
         ]
-      }).select("_id storeName storeImage").limit(10));
+      }).select("_id storeName storeImage totalProducts rating").limit(10));
   
       await redis.setex(key, 600, JSON.stringify(sellers));
     }

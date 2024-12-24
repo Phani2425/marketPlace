@@ -20,6 +20,19 @@ interface SellerApplication {
   storeImage?: string;
 }
 
+const formatDate = (dateString: string) => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (error) {
+    return 'Date unavailable';
+  }
+};
+
 const SellerApplications = () => {
   const [applications, setApplications] = useState<SellerApplication[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,7 +146,7 @@ const SellerApplications = () => {
                   </div>
                   <div className="info-item">
                     <FaClock />
-                    <p><strong>Applied:</strong> {new Date(application.createdAt).toLocaleDateString()}</p>
+                    <p><strong>Applied:</strong> {formatDate(application.storeCreatedAt || application.createdAt)}</p>
                   </div>
                 </div>
 

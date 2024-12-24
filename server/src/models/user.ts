@@ -93,7 +93,8 @@ const schema = new mongoose.Schema(
       default: 0
     },
     storeCreatedAt: {
-      type: Date
+      type: Date,
+      default: Date.now
     }
   },
   {
@@ -102,7 +103,7 @@ const schema = new mongoose.Schema(
 );
 
 schema.pre("save", function(next) {
-  if (this.isModified("role") && this.role === "seller") {
+  if (this.isModified("role") && this.role === "seller" && !this.storeCreatedAt) {
     this.storeCreatedAt = new Date();
   }
   next();
@@ -112,6 +113,7 @@ schema.pre("save", function(next) {
 schema.virtual('age').get(function(this: IUser) {
   const today = new Date();
   const birthDate = this.dob;
+  if (!birthDate) return 0;
   let age = today.getFullYear() - birthDate.getFullYear();
   const m = today.getMonth() - birthDate.getMonth();
   if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {

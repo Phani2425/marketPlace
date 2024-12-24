@@ -19,10 +19,18 @@ export const getPendingSellers = TryCatch(async (req, res, next) => {
     applications = await User.find({ 
       role: "seller", 
       storeStatus: "pending" 
-    }).select("name email storeName storeDescription createdAt");
+    }).select("name email storeName storeDescription storeCreatedAt storeImage").lean();
+
+    // Transform dates before caching
+    const transformedApplications = applications.map(app => ({
+      ...app,
+      createdAt: app.storeCreatedAt || app.createdAt || new Date()
+    }));
 
     // Cache for 5 minutes
-    await redis.setex(key, 300, JSON.stringify(applications));
+    await redis.setex(key, 300, JSON.stringify(transformedApplications));
+    
+    applications = transformedApplications;
   }
 
   return res.status(200).json({

@@ -14,6 +14,7 @@ import { RootState } from '../../redux/store';
 import {CartItem} from '../../types/types.js';
 import {Product} from '../../types/types.js';
 import {addToCart} from '../../redux/reducer/cartReducer';
+import '../../styles/seller/_storeView.scss';
 
 // Animation variants
 const containerVariants: Variants = {
@@ -45,7 +46,8 @@ interface Store {
   storeBanner: string;
   sellerRating: number;
   totalProducts: number;
-  joinedDate: string;
+  storeCreatedAt?: string | Date;
+  createdAt?: string | Date;
 }
 
 
@@ -54,6 +56,19 @@ interface Store {
 
 
 const StoreView = () => {
+
+  const formatDate = (dateString?: string | Date) => {
+    if (!dateString) return 'Recently';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return 'Recently';
+    }
+  };
 
 
   const { id } = useParams();
@@ -137,12 +152,7 @@ const StoreView = () => {
     },
     { 
       icon: FaCalendarAlt, 
-      text: `Joined ${store?.joinedDate ? 
-        new Date(store.joinedDate).toLocaleDateString('en-US', {
-          month: 'long',
-          year: 'numeric'
-        }) : 
-        'Recently'}`,
+      text: `Joined ${formatDate(store?.storeCreatedAt || store?.createdAt)}`,
       value: true 
     }
   ];

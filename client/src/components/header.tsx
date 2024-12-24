@@ -80,10 +80,11 @@ const searchRef = useRef<HTMLDivElement>(null);
     const { data } = await axios.get(
       `${import.meta.env.VITE_SERVER}/api/v1/seller/search?query=${query}`
     );
-    setSearchResults(data.sellers);
+    setSearchResults(Array.isArray(data.sellers) ? data.sellers : []);
     setShowSearchResults(true);
   } catch (error) {
     console.error('Error searching sellers:', error);
+    setSearchResults([]);
   } finally {
     setIsSearching(false);
   }
@@ -286,7 +287,7 @@ const logoutHandler = async () => {
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
         >
-          {searchResults.map((seller) => (
+          {Array.isArray(searchResults) && searchResults.map((seller) => (
             <Link
               key={seller._id}
               to={`/store/${seller._id}`}

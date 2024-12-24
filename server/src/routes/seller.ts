@@ -15,14 +15,14 @@ import {
   getSellerAnalytics,
   getSingleProduct
 } from "../controllers/seller.js";
-import { mutliUpload } from "../middlewares/multer.js";
+import { mutliUpload,upload } from "../middlewares/multer.js";
 
 const router = express.Router();
 
 // Seller Store & Profile
 router.get("/search", searchSellers);
 router.get("/store/:id", getSellerStore);
-router.post("/register", mutliUpload, becomeSeller);
+router.post("/register", upload, becomeSeller);
 router.get("/profile", sellerOnly, getSellerProfile);
 router.put("/profile/update", sellerOnly, mutliUpload, updateSellerProfile);
 
