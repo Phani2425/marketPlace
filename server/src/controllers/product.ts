@@ -17,6 +17,7 @@ import {
   uploadToCloudinary,
 } from "../utils/features.js";
 import ErrorHandler from "../utils/utility-class.js";
+import { PopulatedUser } from "../types/types.js";
 // import { faker } from "@faker-js/faker";
 
 // Revalidate on New,Update,Delete Product & on New Order
@@ -245,23 +246,33 @@ export const getAllProducts = TryCatch(
 );
 
 export const allReviewsOfProduct = TryCatch(async (req, res, next) => {
-  let reviews;
   const key = `reviews-${req.params.id}`;
+  let reviews;
 
   reviews = await redis.get(key);
 
-  if (reviews) reviews = JSON.parse(reviews);
-  else {
+  if (reviews) {
+    reviews = JSON.parse(reviews);
+  } else {
     reviews = await Review.find({
       product: req.params.id,
     })
-      .populate("user", "name photo")
+      .populate<{ user: PopulatedUser }>("user", "name photo")
       .sort({ updatedAt: -1 });
 
-    await redis.setex(key, redisTTL, JSON.stringify(reviews));
-  }
+    const formattedReviews = reviews.map((review) => ({
+      _id: review._id,
+      rating: review.rating,
+      comment: review.comment,
+      userId: review.user._id,
+      userName: review.user.name,
+      userImage: review.user.photo,
+      createdAt: review.createdAt
+    }));
 
-  return res.status(200).json({
+    await redis.setex(key, redisTTL, JSON.stringify(formattedReviews));
+    reviews = formattedReviews;
+  }return res.status(200).json({
     success: true,
     reviews,
   });
@@ -307,8 +318,10 @@ export const newReview = TryCatch(async (req, res, next) => {
     product: true,
     productId: String(product._id),
     admin: true,
-    
+    reviews: true
   });
+
+  await redis.del(`reviews-${product._id}`);
 
   return res.status(alreadyReviewed ? 200 : 201).json({
     success: true,
@@ -345,7 +358,10 @@ export const deleteReview = TryCatch(async (req, res, next) => {
     product: true,
     productId: String(product._id),
     admin: true,
+    reviews: true
   });
+
+  await redis.del(`reviews-${product._id}`);
 
   return res.status(200).json({
     success: true,

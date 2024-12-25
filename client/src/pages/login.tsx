@@ -17,19 +17,35 @@ const Login = () => {
   const [gender, setGender] = useState("");
   const [date, setDate] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(true);
 
   const [login] = useLoginMutation();
 
   const loginHandler = async () => {
-    if (!gender || !date) {
-      toast.error("Please fill all fields");
-      return;
-    }
+    
+    
+    try {
+      
 
     setIsLoading(true);
-    try {
+    
       const provider = new GoogleAuthProvider();
       const { user } = await signInWithPopup(auth, provider);
+
+      const existingUser = await getUser(user.uid);
+      
+      if (existingUser?.user) {
+        // Existing user - direct login
+        dispatch(userExist(existingUser.user));
+        toast.success(`Welcome back, ${existingUser.user.name}!`);
+        return;
+      }
+
+      if (!gender || !date) {
+        setIsNewUser(true);
+        toast.error("Please fill all fields");
+        return;
+      }
 
       const res = await login({
         name: user.displayName!,
@@ -113,60 +129,72 @@ const Login = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            Sign In
+            {isNewUser ? "Create Account" : "Sign In"}
           </motion.h2>
+          
           <motion.p 
             className="subheading"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
           >
-            Continue with Google to access your account
+            {isNewUser 
+              ? "Please fill in your details to get started" 
+              : "Welcome back! Continue with Google to access your account"
+            }
           </motion.p>
 
-          <motion.div 
-            className="form-group"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          > <label>Gender</label>
-          <select value={gender} onChange={(e) => setGender(e.target.value)}>
-            <option value="">Select Gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
-        </motion.div>
+          {isNewUser && (
+            <>
+              <motion.div 
+                className="form-group"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              ><label>Gender</label>
+              <select 
+                value={gender} 
+                onChange={(e) => setGender(e.target.value)}
+                required={isNewUser}
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </motion.div>
 
-        <motion.div 
-          className="form-group"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          <label>Date of Birth</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </motion.div>
-        <motion.button 
-            className="login-btn"
-            onClick={loginHandler}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            disabled={isLoading}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            <span className="google-icon">
-              <FcGoogle />
-            </span>
-            {isLoading ? "Signing In..." : "Continue with Google"}
-          </motion.button>
-        </main>
-      </div>
+            <motion.div 
+              className="form-group"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <label>Date of Birth</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required={isNewUser}
+              />
+            </motion.div>
+          </>
+        )}<motion.button 
+        className="login-btn"
+        onClick={loginHandler}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        disabled={isLoading}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <span className="google-icon">
+          <FcGoogle />
+        </span>
+        {isLoading ? "Signing In..." : "Continue with Google"}
+      </motion.button>
+    </main>
+  </div>
     </div>
   );
 };

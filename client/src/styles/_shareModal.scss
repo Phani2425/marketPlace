@@ -1,0 +1,167 @@
+// src/styles/_shareModal.scss
+
+.share-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: grid;
+    place-items: center;
+    z-index: 1000;
+    padding: 1rem;
+  
+    .share-modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 500px;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  
+      .close-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        color: #666;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+  
+        &:hover {
+          background: #f1f5f9;
+          color: #ef4444;
+        }
+      }
+  
+      .share-header {
+        text-align: center;
+        margin-bottom: 2rem;
+  
+        h2 {
+          font-size: 1.5rem;
+          color: #1e293b;
+          margin-bottom: 1rem;
+        }
+  
+        .share-preview {
+          width: 200px;
+          height: 200px;
+          margin: 0 auto;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+        }
+      }
+  
+      .share-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+  
+        .share-option {
+          background: none;
+          border: 2px solid #f1f5f9;
+          border-radius: 12px;
+          padding: 1rem;
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          color: var(--accent-color);
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+  
+          &:hover {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+            transform: translateY(-2px);
+          }
+  
+          .icon {
+            font-size: 1.2rem;
+          }
+  
+          .name {
+            font-size: 0.9rem;
+          }
+        }
+      }
+  
+      .share-footer {
+        background: #f8fafc;
+        padding: 1rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+  
+        .share-url {
+          flex: 1;
+          font-size: 0.9rem;
+          color: #64748b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+  
+        .copy-btn {
+          background: #1e293b;
+          color: white;
+          border: none;
+          padding: 0.6rem 1.2rem;
+          border-radius: 8px;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+  
+          &:hover {
+            background: #334155;
+            transform: translateY(-1px);
+          }
+        }
+      }
+    }
+  }
+  
+  // Add responsive design
+  @media (max-width: 480px) {
+    .share-modal-overlay {
+      .share-modal-content {
+        padding: 1.5rem;
+  
+        .share-options {
+          grid-template-columns: 1fr;
+        }
+  
+        .share-footer {
+          flex-direction: column;
+          
+          .share-url {
+            width: 100%;
+            text-align: center;
+          }
+          
+          .copy-btn {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+      }
+    }
+  }

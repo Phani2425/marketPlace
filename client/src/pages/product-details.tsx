@@ -1,13 +1,25 @@
 // src/pages/product-details.tsx
 import { CarouselButtonType, MyntraCarousel, Slider, useRating } from "6pp";
-import {  useRef, useState } from "react";
+import { useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { FaTrash, FaRegHeart, FaHeart, FaShoppingCart } from "react-icons/fa";
-import { FaArrowLeftLong, FaArrowRightLong, FaRegStar, FaStar, FaShare } from "react-icons/fa6";
+import {
+  FaTrash,
+  FaRegHeart,
+  FaHeart,
+  FaShoppingCart,
+  FaUser,
+} from "react-icons/fa";
+import {
+  FaArrowLeftLong,
+  FaArrowRightLong,
+  FaRegStar,
+  FaStar,
+  FaShare,
+} from "react-icons/fa6";
 import { FiEdit, FiPackage, FiShield, FiTruck } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { Navigate, useParams,useNavigate } from "react-router-dom";
+import { Navigate, useParams, useNavigate } from "react-router-dom";
 import { Skeleton } from "../components/loader";
 import RatingsComponent from "../components/ratings";
 import {
@@ -19,9 +31,10 @@ import {
 } from "../redux/api/productAPI";
 import { addToCart } from "../redux/reducer/cartReducer";
 import { RootState } from "../redux/store";
-import { CartItem, Review } from "../types/types";
-import { responseToast } from "../utils/features";
+import { CartItem } from "../types/types";
+// import { responseToast } from "../utils/features";
 import ProductCard from "../components/product-card";
+import ShareModal from "../components/shared/ShareModal";
 
 const ProductDetails = () => {
   const params = useParams();
@@ -31,26 +44,30 @@ const ProductDetails = () => {
 
   const handleBuyNow = () => {
     addToCartHandler({
-      productId: data?.product?._id|| "",
-      name: data?.product?.name|| "",
-      price: data?.product?.price|| 0,
-      stock: data?.product?.stock|| 0,
+      productId: data?.product?._id || "",
+      name: data?.product?.name || "",
+      price: data?.product?.price || 0,
+      stock: data?.product?.stock || 0,
       quantity,
       photo: data?.product?.photos[0].url || "",
     });
-    navigate('/pay'); // Navigate to the checkout page
+    navigate("/pay"); // Navigate to the checkout page
   };
 
   const { isLoading, isError, data } = useProductDetailsQuery(params.id!);
-  const reviewsResponse = useAllReviewsOfProductsQuery(params.id!);
-  const relatedProducts = useRelatedProductsQuery(data?.product?.category || "");
-  
+  // const reviewsResponse = useAllReviewsOfProductsQuery(params.id!);
+  const relatedProducts = useRelatedProductsQuery(
+    data?.product?.category || ""
+  );
+
   const [carouselOpen, setCarouselOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'reviews'>('description');
+  const [activeTab, setActiveTab] = useState<
+    "description" | "specifications" | "reviews"
+  >("description");
 
   const [reviewComment, setReviewComment] = useState("");
   const reviewDialogRef = useRef<HTMLDialogElement>(null);
@@ -59,13 +76,17 @@ const ProductDetails = () => {
   const [createReview] = useNewReviewMutation();
   const [deleteReview] = useDeleteReviewMutation();
 
-  const decrement = () => quantity > 1 && setQuantity(prev => prev - 1);
+  const isFashionItem = data?.product?.category.toLowerCase() === "fashion";
+  const { data: reviewsData, refetch: refetchReviews } =
+    useAllReviewsOfProductsQuery(params.id!);
+
+  const decrement = () => quantity > 1 && setQuantity((prev) => prev - 1);
   const increment = () => {
     if (data?.product?.stock === quantity) {
       toast.error(`Only ${data?.product?.stock} units available`);
       return;
     }
-    setQuantity(prev => prev + 1);
+    setQuantity((prev) => prev + 1);
   };
 
   const addToCartHandler = (cartItem: CartItem) => {
@@ -74,23 +95,23 @@ const ProductDetails = () => {
     toast.success("Added to cart");
   };
 
-  const handleShare = async () => {
-    try {
-      await navigator.share({
-        title: data?.product?.name,
-        text: data?.product?.description,
-        url: window.location.href,
-      });
-    } catch {
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator
+        .share({
+          title: data?.product?.name || "Product",
+          text: data?.product?.description || "",
+          url: window.location.href,
+        })
+        .catch(() => {
+          setShowShareModal(true);
+        });
+    } else {
       setShowShareModal(true);
     }
   };
 
-  const {
-    Ratings: RatingsEditable,
-    rating,
-    
-  } = useRating({
+  const { Ratings: RatingsEditable, rating } = useRating({
     IconFilled: <FaStar />,
     IconOutline: <FaRegStar />,
     value: 0,
@@ -110,22 +131,48 @@ const ProductDetails = () => {
   const handleReviewSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setReviewSubmitLoading(true);
-    
-    const res = await createReview({
-      comment: reviewComment,
-      rating,
-      userId: user?._id,
-      productId: params.id!,
-    });
 
-    responseToast(res, null, "");
-    closeReviewDialog();
-    setReviewSubmitLoading(false);
+    try {
+      const res = await createReview({
+        comment: reviewComment,
+        rating,
+        userId: user?._id,
+        productId: params.id!,
+      });
+
+      if ("data" in res) {
+        toast.success("Review added successfully");
+        setReviewComment("");
+        closeReviewDialog();
+        // Refetch reviews after adding new one
+        await refetchReviews();
+      } else {
+        toast.error("Failed to add review");
+      }
+    } catch (error) {
+      toast.error("Error submitting review");
+    } finally {
+      setReviewSubmitLoading(false);
+    }
   };
-
   const handleDeleteReview = async (reviewId: string) => {
-    const res = await deleteReview({ reviewId, userId: user?._id });
-    responseToast(res, null, "");
+    // Check if user is logged in and owns the review
+    if (!user) {
+      toast.error("Please login to delete review");
+      return;
+    }
+
+    try {
+      const res = await deleteReview({ reviewId, userId: user._id });
+      if ("data" in res) {
+        toast.success("Review deleted successfully");
+        await refetchReviews();
+      } else {
+        toast.error("Failed to delete review");
+      }
+    } catch (error) {
+      toast.error("Error deleting review");
+    }
   };
 
   if (isError) return <Navigate to="/404" />;
@@ -137,7 +184,7 @@ const ProductDetails = () => {
       ) : (
         <>
           <div className="product-hero">
-            <motion.section 
+            <motion.section
               className="product-images"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -158,7 +205,7 @@ const ProductDetails = () => {
               )}
             </motion.section>
 
-            <motion.section 
+            <motion.section
               className="product-info"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -166,8 +213,8 @@ const ProductDetails = () => {
               <div className="product-header">
                 <h1>{data?.product?.name}</h1>
                 <div className="product-actions">
-                  <button 
-                    className={`wishlist-btn ${isWishlisted ? 'active' : ''}`}
+                  <button
+                    className={`wishlist-btn ${isWishlisted ? "active" : ""}`}
                     onClick={() => setIsWishlisted(!isWishlisted)}
                   >
                     {isWishlisted ? <FaHeart /> : <FaRegHeart />}
@@ -196,20 +243,24 @@ const ProductDetails = () => {
                 )}
               </div>
 
-              <div className="size-section">
-                <h3>Select Size</h3>
-                <div className="size-grid">
-                  {['S', 'M', 'L', 'XL', 'XXL'].map(size => (
-                    <button
-                      key={size}
-                      className={`size-btn ${selectedSize === size ? 'active' : ''}`}
-                      onClick={() => setSelectedSize(size)}
-                    >
-                      {size}
-                    </button>
-                  ))}
+              {isFashionItem && (
+                <div className="size-section">
+                  <h3>Select Size</h3>
+                  <div className="size-grid">
+                    {["S", "M", "L", "XL", "XXL"].map((size) => (
+                      <button
+                        key={size}
+                        className={`size-btn ${
+                          selectedSize === size ? "active" : ""
+                        }`}
+                        onClick={() => setSelectedSize(size)}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="quantity-section">
                 <h3>Quantity</h3>
@@ -236,7 +287,9 @@ const ProductDetails = () => {
                 >
                   <FaShoppingCart /> Add to Cart
                 </button>
-                <button className="buy-now" onClick={handleBuyNow}>Buy Now</button>
+                <button className="buy-now" onClick={handleBuyNow}>
+                  Buy Now
+                </button>
               </div>
 
               <div className="product-features">
@@ -258,20 +311,22 @@ const ProductDetails = () => {
 
           <section className="product-details-tabs">
             <div className="tab-buttons">
-              {(['description', 'specifications', 'reviews'] as const).map(tab => (
-                <button
-                  key={tab}
-                  className={activeTab === tab ? 'active' : ''}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
+              {(["description", "specifications", "reviews"] as const).map(
+                (tab) => (
+                  <button
+                    key={tab}
+                    className={activeTab === tab ? "active" : ""}
+                    onClick={() => setActiveTab(tab)}
+                  >
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </button>
+                )
+              )}
             </div>
 
             <div className="tab-content">
               <AnimatePresence mode="wait">
-                {activeTab === 'description' && (
+                {activeTab === "description" && (
                   <motion.div
                     key="description"
                     initial={{ opacity: 0, y: 20 }}
@@ -283,7 +338,7 @@ const ProductDetails = () => {
                   </motion.div>
                 )}
 
-                {activeTab === 'specifications' && (
+                {activeTab === "specifications" && (
                   <motion.div
                     key="specifications"
                     initial={{ opacity: 0, y: 20 }}
@@ -295,7 +350,7 @@ const ProductDetails = () => {
                   </motion.div>
                 )}
 
-                {activeTab === 'reviews' && (
+                {activeTab === "reviews" && (
                   <motion.div
                     key="reviews"
                     initial={{ opacity: 0, y: 20 }}
@@ -304,26 +359,43 @@ const ProductDetails = () => {
                     className="reviews-content"
                   >
                     <div className="reviews-header">
-                      <h2>Customer Reviews</h2>
+                      <h2>
+                        Customer Reviews ({reviewsData?.reviews.length || 0})
+                      </h2>
                       {user && (
-                        <button onClick={() => reviewDialogRef.current?.showModal()}>
+                        <button
+                          onClick={() => reviewDialogRef.current?.showModal()}
+                        >
                           <FiEdit /> Write a Review
                         </button>
                       )}
                     </div>
 
                     <div className="reviews-list">
-                      {reviewsResponse.isLoading ? (
-                        <Skeleton count={3} height={100} />
-                      ) : (
-                        reviewsResponse.data?.reviews.map((review) => (
+                      {reviewsData?.reviews &&
+                      reviewsData.reviews.length > 0 ? (
+                        reviewsData.reviews.map((review) => (
                           <ReviewCard
                             key={review._id}
-                            review={review}
+                            review={{
+                              _id: review._id,
+                              userId: review.user._id, // Map from nested user object
+                              rating: review.rating,
+                              comment: review.comment,
+                              userName: review.user.name, // Map from nested user object
+                              userImage: review.user.photo, // Map from nested user object
+                              createdAt: review.createdAt,
+                            }}
                             userId={user?._id}
                             handleDeleteReview={handleDeleteReview}
                           />
                         ))
+                      ) : (
+                        <div className="no-reviews">
+                          <p>
+                            No reviews yet. Be the first to review this product!
+                          </p>
+                        </div>
                       )}
                     </div>
                   </motion.div>
@@ -370,65 +442,82 @@ const ProductDetails = () => {
             />
           </div>
           <div className="dialog-actions">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => reviewDialogRef.current?.close()}
             >
               Cancel
             </button>
-            <button 
-              type="submit"
-              disabled={reviewSubmitLoading}
-            >
-              {reviewSubmitLoading ? 'Submitting...' : 'Submit Review'}
+            <button type="submit" disabled={reviewSubmitLoading}>
+              {reviewSubmitLoading ? "Submitting..." : "Submit Review"}
             </button>
           </div>
         </form>
       </dialog>
 
-      {showShareModal && (
-        <div className="share-modal">
-          {/* Add share options */}
-        </div>
-      )}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        url={window.location.href}
+        title={data?.product?.name || "Product"}
+        image={data?.product?.photos[0]?.url}
+      />
     </div>
   );
 };
 
-// 
-
-// In src/pages/product-details.tsx
-
 interface ReviewCardProps {
-  review: Review;
+  review: {
+    _id: string;
+    userId: string;
+    rating: number;
+    comment: string;
+    userName: string;
+    userImage?: string;
+    createdAt: string;
+  };
   userId?: string;
   handleDeleteReview: (reviewId: string) => void;
 }
 
-const ReviewCard = ({ review, userId, handleDeleteReview }: ReviewCardProps) => {
-  if (!review) return null;
+const ReviewCard = ({
+  review,
+  userId,
+  handleDeleteReview,
+}: ReviewCardProps) => {
+  const isOwnReview = userId === review.userId;
 
   return (
-    <motion.div 
+    <motion.div
       className="review-card"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
     >
       <div className="review-header">
         <div className="user-info">
-          <img 
-            src={review.user?.photo || '/default-avatar.png'} 
-            alt={review.user?.name || 'User'} 
-          />
+          {review.userImage ? (
+            <img src={review.userImage} alt={review.userName} />
+          ) : (
+            <FaUser className="user-icon" />
+          )}
           <div>
-            <h4>{review.user?.name || 'Anonymous'}</h4>
-            <RatingsComponent value={review.rating} />
+            <h4>{review.userName}</h4>
+            <div className="rating">
+              {[...Array(5)].map((_, index) => (
+                <FaStar
+                  key={index}
+                  className={index < review.rating ? "filled" : ""}
+                  color="#fbbf24"
+                />
+              ))}
+            </div>{" "}
           </div>
         </div>
-        {userId === review.user?._id && (
-          <button 
-            className="delete-review" 
+        {isOwnReview && (
+          <button
+            className="delete-review"
             onClick={() => handleDeleteReview(review._id)}
+            title="Delete review"
           >
             <FaTrash />
           </button>
@@ -441,6 +530,7 @@ const ReviewCard = ({ review, userId, handleDeleteReview }: ReviewCardProps) => 
     </motion.div>
   );
 };
+
 const NextButton: CarouselButtonType = ({ onClick }) => (
   <button onClick={onClick} className="carousel-btn next">
     <FaArrowRightLong />

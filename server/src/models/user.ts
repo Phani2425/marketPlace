@@ -19,6 +19,7 @@ interface IUser extends Document {
   storeBanner?: string; 
   storeCreatedAt?: Date;
   age: number;
+  sellerRating?: number;
 }
 
 const schema = new mongoose.Schema(
@@ -100,6 +101,8 @@ const schema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
 

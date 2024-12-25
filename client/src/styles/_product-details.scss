@@ -385,7 +385,12 @@
           justify-content: space-between;
           align-items: center;
           margin-bottom: 2rem;
-
+        
+          h2 {
+            font-size: 1.5rem;
+            color: #1e293b;
+          }
+        
           button {
             display: flex;
             align-items: center;
@@ -396,16 +401,91 @@
             border: none;
             border-radius: 8px;
             font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            cursor: pointer;transition: all 0.3s ease;
 
             &:hover {
               background: #2563eb;
               transform: translateY(-2px);
             }
+        
+            svg {
+              font-size: 1.2rem;
+            }
           }
         }
-      }
+        .no-reviews {
+          text-align: center;
+          padding: 2rem;
+          background: #f8fafc;
+          border-radius: 12px;
+          color: #64748b;
+        }
+      
+        .reviews-list {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+          margin-top: 2rem;
+        }
+      
+        .review-card {
+          background: white;
+          padding: 1.5rem;
+          border-radius: 12px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+      
+            .user-info {
+              display: flex;
+              align-items: center;
+              gap: 1rem;
+      
+              img {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                object-fit: cover;
+              }
+      
+              h4 {
+                color: #1e293b;
+                margin-bottom: 0.25rem;
+              }
+            }
+            .delete-review {
+              display: none;
+              color: #ef4444;
+              background: none;
+              border: none;
+              padding: 0.5rem;
+              cursor: pointer;
+              transition: all 0.2s ease;
+          
+              &:hover {
+                transform: scale(1.1);
+              }
+            }
+          
+            &:hover .delete-review {
+              display: block;
+            }
+          }
+      
+          .review-comment {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+          }
+      
+          .review-date {
+            color: #94a3b8;
+            font-size: 0.875rem;
+          }
+        }
+      }      
     }
   }
 
@@ -598,3 +678,4 @@
     transform: translateY(0);
   }
 }
+

@@ -15,6 +15,7 @@ import {CartItem} from '../../types/types.js';
 import {Product} from '../../types/types.js';
 import {addToCart} from '../../redux/reducer/cartReducer';
 import '../../styles/seller/_storeView.scss';
+import ShareModal from '../../components/shared/ShareModal';
 
 // Animation variants
 const containerVariants: Variants = {
@@ -76,9 +77,10 @@ const StoreView = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
-  const [showShareTooltip, setShowShareTooltip] = useState(false);
+  // const [showShareTooltip, setShowShareTooltip] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useSelector((state: RootState) => state.userReducer);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const isStoreOwner = user?._id === id;
 
@@ -131,12 +133,20 @@ const StoreView = () => {
       p.category.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setShowShareTooltip(true);
-    setTimeout(() => setShowShareTooltip(false), 2000);
-    toast.success('Store link copied!');
-  };
+    const handleShare = () => {
+      if (navigator.share) {
+        navigator.share({
+          title: store?.storeName || 'Store',
+          text: store?.storeDescription || '',
+          url: window.location.href,
+        }).catch(() => {
+          setShowShareModal(true);
+        });
+      } else {
+        setShowShareModal(true);
+      }
+    };
+  
 
 
   const stats = [
@@ -184,7 +194,7 @@ const StoreView = () => {
         <div className="store-header">
           <motion.div 
             className="store-avatar"
-            whileHover={{ scale: 1.05, rotate: 5 }}
+            whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
             {store?.storeImage ? (
@@ -237,18 +247,6 @@ const StoreView = () => {
         >
           <FaShareAlt />
           Share Store
-          <AnimatePresence>
-            {showShareTooltip && (
-              <motion.span 
-                className="tooltip"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                Link copied!
-              </motion.span>
-            )}
-          </AnimatePresence>
         </motion.button>
       )}
           </div>
@@ -332,6 +330,14 @@ const StoreView = () => {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <ShareModal 
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        url={window.location.href}
+        title={store?.storeName || 'Store'}
+        image={store?.storeImage}
+      />
     </div>
   );
 };

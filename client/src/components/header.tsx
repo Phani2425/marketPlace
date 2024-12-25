@@ -80,8 +80,13 @@ const searchRef = useRef<HTMLDivElement>(null);
     const { data } = await axios.get(
       `${import.meta.env.VITE_SERVER}/api/v1/seller/search?query=${query}`
     );
-    setSearchResults(Array.isArray(data.sellers) ? data.sellers : []);
-    setShowSearchResults(true);
+    if (data.success && Array.isArray(data.sellers)) {
+      setSearchResults(data.sellers);
+      setShowSearchResults(true);
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
   } catch (error) {
     console.error('Error searching sellers:', error);
     setSearchResults([]);
@@ -100,6 +105,7 @@ useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
     if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
       setShowSearchResults(false);
+      setSellerSearch("");
     }
     if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node) && isSidebarOpen) {
       resetSidebar();

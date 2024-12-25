@@ -1,6 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import { Document } from 'mongoose';
 
+export interface PopulatedUser {
+  _id: string;
+  name: string;
+  photo: string;
+}
+
 
 export type SearchRequestQuery = {
   search?: string;

@@ -525,35 +525,62 @@ return sum + (orderItem && orderItem.price && orderItem.quantity ? orderItem.pri
   });
 });
 
+interface SellerWithProducts {
+  _id: string;
+  storeName: string;
+  storeImage: string;
+  totalProducts: number;
+  rating: number;
+}
 
 export const searchSellers = TryCatch(async (req, res, next) => {
-    const { query } = req.query;
-    
-    if (!query) return next(new ErrorHandler("Search query is required", 400));
+  const { query } = req.query;
   
-    const key = `seller-search-${query}`;
-    let sellers:string | null = await redis.get(key);
-  
-    if (sellers) {
-      sellers = JSON.parse(sellers);
-    } else {
-      sellers = JSON.stringify(await User.find({
-        role: "seller",
-        storeStatus: "approved",
-        $or: [
-          { storeName: { $regex: query, $options: "i" } },
-          { storeDescription: { $regex: query, $options: "i" } }
-        ]
-      }).select("_id storeName storeImage totalProducts rating").limit(10));
-  
-      await redis.setex(key, 600, JSON.stringify(sellers));
-    }
-  
-    return res.status(200).json({
-      success: true,
-      sellers,
-    });
+  if (!query) return next(new ErrorHandler("Search query is required", 400));
+
+  const key = `seller-search-${query}`;
+  let sellers: SellerWithProducts[];
+
+  const cachedSellers = await redis.get(key);
+  if (cachedSellers) {
+    sellers = JSON.parse(cachedSellers);
+  } else {
+    const matchingSellers = await User.find({
+      role: "seller",
+      storeStatus: "approved",
+      $or: [
+        { storeName: { $regex: query, $options: "i" } },
+        { storeDescription: { $regex: query, $options: "i" } }
+      ]
+    }).select("_id storeName storeImage sellerRating");
+
+    const sellersWithProducts = await Promise.all(
+      matchingSellers.map(async (seller) => {
+        const productCount = await Product.countDocuments({ 
+          seller: seller._id,
+          status: "approved"
+        });
+
+        // Transform to match SellerWithProducts interface
+        return {
+          _id: seller._id.toString(),
+          storeName: seller.storeName || '',
+          storeImage: seller.storeImage || '',
+          totalProducts: productCount,
+          rating: seller.sellerRating || 0
+        };
+      })
+    );
+
+    sellers = sellersWithProducts;
+    await redis.setex(key, 600, JSON.stringify(sellersWithProducts));
+  }
+
+  return res.status(200).json({
+    success: true,
+    sellers
   });
+});
 
   export const getSingleProduct = TryCatch(async (req, res, next) => {
     const { id } = req.params;

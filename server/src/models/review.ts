@@ -1,5 +1,20 @@
 import mongoose from "mongoose";
 
+interface PopulatedUser {
+  _id: string;
+  name: string;
+  photo: string;
+}
+
+export interface ReviewDocument extends mongoose.Document {
+  comment: string;
+  rating: number;
+  user: PopulatedUser;
+  product: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 const schema = new mongoose.Schema(
   {
     comment: {

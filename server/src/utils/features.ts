@@ -110,6 +110,7 @@ export const invalidateCache = async ({
   order,
   orderId,
   userId,
+  reviews
 }: {
   product?: boolean;
   productId?: string | string[];
@@ -119,6 +120,7 @@ export const invalidateCache = async ({
   order?: boolean;
   orderId?: string;
   userId?: string;
+  reviews?: boolean;
 }) => {
   if (product) {
     const productKeys: string[] = [
@@ -127,10 +129,18 @@ export const invalidateCache = async ({
       "all-products",
     ];
 
-    if (typeof productId === "string") productKeys.push(`product-${productId}`);
+    if (typeof productId === "string") {
+      productKeys.push(`product-${productId}`);
+      // Also invalidate reviews cache for this product
+      productKeys.push(`reviews-${productId}`);
+    }
 
-    if (typeof productId === "object")
-      productId.forEach((i) => productKeys.push(`product-${i}`));
+    if (typeof productId === "object") {
+      productId.forEach((id) => {
+        productKeys.push(`product-${id}`);
+        productKeys.push(`reviews-${id}`);
+      });
+    }
 
     await redis.del(productKeys);
   }

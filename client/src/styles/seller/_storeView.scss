@@ -29,7 +29,7 @@
   .store-hero {
     background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
     padding: 2rem 0;
-    margin-top: -50px; // Overlap with banner
+    margin-top: -20px; // Overlap with banner
     border-radius: 10px 10px 0 0;
     position: relative;
 
@@ -99,6 +99,8 @@
         text-align: center;
         max-width: 800px;
         margin: 0 auto;
+        position: relative;
+        top: -80px;
         
 
         .share-btn {
