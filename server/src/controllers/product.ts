@@ -260,15 +260,15 @@ export const allReviewsOfProduct = TryCatch(async (req, res, next) => {
       .populate<{ user: PopulatedUser }>("user", "name photo")
       .sort({ updatedAt: -1 });
 
-    const formattedReviews = reviews.map((review) => ({
-      _id: review._id,
-      rating: review.rating,
-      comment: review.comment,
-      userId: review.user._id,
-      userName: review.user.name,
-      userImage: review.user.photo,
-      createdAt: review.createdAt
-    }));
+      const formattedReviews = reviews.map((review) => ({
+        _id: review._id,
+        rating: review.rating,
+        comment: review.comment,
+        userId: review.user?._id || '', 
+        userName: review.user?.name || 'Anonymous', 
+        userImage: review.user?.photo || '', 
+        createdAt: review.createdAt
+      }));
 
     await redis.setex(key, redisTTL, JSON.stringify(formattedReviews));
     reviews = formattedReviews;

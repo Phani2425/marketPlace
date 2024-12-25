@@ -379,12 +379,12 @@ const ProductDetails = () => {
                             key={review._id}
                             review={{
                               _id: review._id,
-                              userId: review.user._id, // Map from nested user object
+                              userId: review.user?._id || '', 
                               rating: review.rating,
                               comment: review.comment,
-                              userName: review.user.name, // Map from nested user object
-                              userImage: review.user.photo, // Map from nested user object
-                              createdAt: review.createdAt,
+                              userName: review.user?.name || 'Anonymous', 
+                              userImage: review.user?.photo || '', 
+                              createdAt: review.createdAt
                             }}
                             userId={user?._id}
                             handleDeleteReview={handleDeleteReview}
@@ -510,7 +510,7 @@ const ReviewCard = ({
                   color="#fbbf24"
                 />
               ))}
-            </div>{" "}
+            </div>
           </div>
         </div>
         {isOwnReview && (
