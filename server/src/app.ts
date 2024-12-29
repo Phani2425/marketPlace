@@ -6,6 +6,7 @@ import morgan from "morgan";
 import Stripe from "stripe";
 import cors from "cors";
 import { v2 as cloudinary } from "cloudinary";
+import { initializeAdmin } from "./utils/features.js";
 
 // Importing Routes
 import userRoute from "./routes/user.js";
@@ -28,7 +29,9 @@ const clientURL = process.env.CLIENT_URL || "";
 export const redisTTL = process.env.REDIS_TTL || 60 * 60 * 4;
 
 connectDB(mongoURI);
+await initializeAdmin();
 export const redis = connectRedis(redisURI);
+
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -44,7 +47,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: '*',
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })

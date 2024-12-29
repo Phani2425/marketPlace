@@ -3,7 +3,7 @@ import { User } from "../models/user.js";
 import { NewUserRequestBody } from "../types/types.js";
 import { TryCatch } from "../middlewares/error.js";
 import ErrorHandler from "../utils/utility-class.js";
-
+import { redis } from "../app.js"; 
 // export const newUser = TryCatch(
 //   async (
 //     req: Request<{}, {}, NewUserRequestBody>,
@@ -150,5 +150,44 @@ export const deleteUser = TryCatch(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     message: "User Deleted Successfully",
+  });
+});
+
+
+export const adminLogin = TryCatch(async (req, res, next) => {
+  const { secretKey } = req.body;
+
+  if (!secretKey) {
+    return next(new ErrorHandler("Admin secret key is required", 400));
+  }
+
+  if (secretKey !== process.env.ADMIN_SECRET_KEY) {
+    return next(new ErrorHandler("Invalid admin credentials", 401));
+  }
+
+  const admin = await User.findOne({ role: "admin" });
+  if (!admin) {
+    return next(new ErrorHandler("Admin account not found", 404));
+  }
+
+  // Add rate limiting check here
+  const rateLimitKey = `admin-login-attempts:${req.ip}`;
+  const attempts = await redis.incr(rateLimitKey);
+  if (attempts === 1) {
+    await redis.expire(rateLimitKey, 300); // 5 minutes
+  }
+  if (attempts > 5) {
+    return next(new ErrorHandler("Too many login attempts. Try again later.", 429));
+  }
+
+  // Clear rate limit on successful login
+  if (secretKey === process.env.ADMIN_SECRET_KEY) {
+    await redis.del(rateLimitKey);
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Admin login successful",
+    user: admin
   });
 });

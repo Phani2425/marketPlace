@@ -6,6 +6,8 @@ import { Product } from "../models/product.js";
 import { Review } from "../models/review.js";
 import { InvalidateCacheProps, OrderItemType } from "../types/types.js";
 import nodemailer from 'nodemailer';
+import { User } from "../models/user.js";
+import crypto from 'crypto';
 
 interface EmailOptions {
   email: string;
@@ -259,4 +261,26 @@ export const clearSellerCache = async (sellerId: string) => {
   ];
   
   await Promise.all(keys.map(key => redis.del(key)));
+};
+
+
+export const initializeAdmin = async () => {
+  try {
+    const adminExists = await User.findOne({ role: "admin" });
+    if (!adminExists) {
+      const adminId = crypto.randomUUID(); // Use randomUUID instead of randomBytes
+      await User.create({
+        _id: adminId,
+        name: process.env.ADMIN_NAME || 'Admin',
+        email: process.env.ADMIN_EMAIL || 'admin@example.com',
+        photo: "default-admin.jpg",
+        role: "admin",
+        gender: "male",
+        dob: new Date(),
+      });
+      console.log("Admin account initialized");
+    }
+  } catch (error) {
+    console.error("Failed to initialize admin:", error);
+  }
 };
