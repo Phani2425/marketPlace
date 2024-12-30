@@ -31,11 +31,11 @@ const Login = () => {
         try {
           const { data } = await axios.post(
             `${server}/api/v1/user/admin-login`,
-            { secretKey: adminKey.trim() },
-            { withCredentials: true ,
-            headers: {
-              "Content-Type": "application/json"
-            }}
+            { secretKey: adminKey.trim() }
+            // { withCredentials: true ,
+            // headers: {
+            //   "Content-Type": "application/json"
+            // }}
           );
 
           if (data.success) {
