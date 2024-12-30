@@ -39,6 +39,11 @@ const Login = () => {
           );
 
           if (data.success) {
+            const adminData = {
+              user: data.user,
+              expiresAt: new Date().getTime() + (24 * 60 * 60 * 1000) // 24 hours
+            };
+            localStorage.setItem('adminData', JSON.stringify(adminData));
             toast.success("Welcome Admin!");
             dispatch(userExist(data.user));
             setTimeout(() => {

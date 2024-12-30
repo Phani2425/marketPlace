@@ -72,9 +72,36 @@ const App = () => {
       if (user) {
         const data = await getUser(user.uid);
         dispatch(userExist(data.user));
-      } else dispatch(userNotExist());
+      } else {
+        // Check for stored admin data when no regular user is logged in
+        const adminDataStr = localStorage.getItem('adminData');
+        if (adminDataStr) {
+          const adminData = JSON.parse(adminDataStr);
+          const now = new Date().getTime();
+          
+          if (now < adminData.expiresAt) {
+            // Admin session is still valid
+            dispatch(userExist(adminData.user));
+          } else {
+            // Admin session expired, clear data
+            localStorage.removeItem('adminData');
+            dispatch(userNotExist());
+          }
+        } else {
+          dispatch(userNotExist());
+        }
+      }
     });
   }, []);
+
+  // useEffect(() => {
+  //   onAuthStateChanged(auth, async (user) => {
+  //     if (user) {
+  //       const data = await getUser(user.uid);
+  //       dispatch(userExist(data.user));
+  //     } else dispatch(userNotExist());
+  //   });
+  // }, []);
 
   return loading ? (
     <Loader />

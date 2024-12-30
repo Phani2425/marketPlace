@@ -22,6 +22,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import debounce from 'lodash/debounce';
+import {useNavigate} from 'react-router-dom';
 
 
 
@@ -65,6 +66,7 @@ const [searchResults, setSearchResults] = useState<SellerSearchResult[]>([]);
 const [showSearchResults, setShowSearchResults] = useState(false);
 const [isSearching, setIsSearching] = useState(false);
 const searchRef = useRef<HTMLDivElement>(null);
+const navigate = useNavigate();
 
  // Debounced search handler
  const debouncedSearch = debounce(async (query: string) => {
@@ -135,9 +137,11 @@ const resetSidebar = () => {
 
 const logoutHandler = async () => {
   try {
+    localStorage.removeItem('adminData');
     await signOut(auth);
     toast.success("Sign Out Successfully");
     resetSidebar();
+    navigate('/');
   } catch (error) {
     toast.error("Sign Out Fail");
   }
