@@ -73,7 +73,7 @@ const schema = new mongoose.Schema(
         },
         status: {
           type: String,
-          enum: ["pending", "approved", "rejected"],
+          enum: ["pending", "approved", "rejected","deregistered"],
           default: "approved"
         }
   },
@@ -95,5 +95,6 @@ schema.index({ seller: 1 });
 schema.index({ seller: 1, status: 1 });
 schema.index({ category: 1, status: 1 });
 schema.index({ name: 'text', description: 'text' });
+schema.index({ seller: 1 });
 
 export const Product = mongoose.model("Product", schema);

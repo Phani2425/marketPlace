@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { AiFillFileText } from "react-icons/ai";
-import {
-  FaChartBar,
-  FaChartLine,
-  FaChartPie,
-  FaStore
-} from "react-icons/fa";
+import { FaChartBar, FaChartLine, FaChartPie, FaStore,FaUsers } from "react-icons/fa";
 import { HiMenuAlt4 } from "react-icons/hi";
 import { IoIosPeople } from "react-icons/io";
 import {
@@ -109,13 +104,19 @@ const DivOne = ({ location }: { location: Location }) => (
         Icon={MdDiscount}
         location={location}
       />
+      <Li
+        url="/admin/sellers"
+        text="Sellers"
+        Icon={FaUsers}
+        location={location}
+      />
 
-<Li
-  url="/admin/seller-applications"
-  text="Seller Applications"
-  Icon={FaStore}
-  location={location}
-/>
+      <Li
+        url="/admin/seller-applications"
+        text="Seller Applications"
+        Icon={FaStore}
+        location={location}
+      />
     </ul>
   </div>
 );

@@ -29,8 +29,10 @@ const clientURL = process.env.CLIENT_URL || "";
 export const redisTTL = process.env.REDIS_TTL || 60 * 60 * 4;
 
 connectDB(mongoURI);
-await initializeAdmin();
+
 export const redis = connectRedis(redisURI);
+
+await initializeAdmin();
 
 
 cloudinary.config({

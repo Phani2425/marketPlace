@@ -15,11 +15,18 @@ interface IUser extends Document {
   storeName?: string;
   storeDescription?: string;
   storeImage?: string;
-  storeStatus: "pending" | "approved" | "rejected";
+  storeStatus: "pending" | "approved" | "rejected" | "deregistered";
   storeBanner?: string; 
   storeCreatedAt?: Date;
   age: number;
+  ratings: Array<{
+    user: string;
+    rating: number;
+  }>;
   sellerRating?: number;
+  numOfReviews: number;
+  totalProducts: number;
+  sellerPin?: string;
 }
 
 const schema = new mongoose.Schema(
@@ -80,13 +87,30 @@ const schema = new mongoose.Schema(
     },
     storeStatus: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
+      enum: ["pending", "approved", "rejected", "deregistered"],
       default: "pending"
     },
     storeBanner: {
       type: String
     },
+    ratings: [{
+      user: {
+        type: String,
+        ref: "User",
+        required: true
+      },
+      rating: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: 5
+      }
+    }],
     sellerRating: {
+      type: Number,
+      default: 0
+    },
+    numOfReviews: {
       type: Number,
       default: 0
     },
@@ -97,6 +121,18 @@ const schema = new mongoose.Schema(
     storeCreatedAt: {
       type: Date,
       default: Date.now
+    },
+
+    //remove this in production
+    sellerPin: {
+      type: String,
+      select: false, // Hide PIN from queries by default
+      validate: {
+        validator: function(v: string) {
+          return /^\d{6}$/.test(v); // 6-digit PIN
+        },
+        message: 'PIN must be 6 digits'
+      }
     }
   },
   {
@@ -128,6 +164,8 @@ schema.virtual('age').get(function(this: IUser) {
 
 schema.set('toJSON', { virtuals: true });
 schema.set('toObject', { virtuals: true });
+schema.index({ role: 1, storeStatus: 1 });
+schema.index({ _id: 1, role: 1 });
 
 export const User = mongoose.model<IUser>("User", schema);
 

@@ -270,6 +270,21 @@
       max-width: 400px;
       margin: 0 auto;
 
+      .seller-login-link {
+        display: block;
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #667eea;
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: color 0.3s ease;
+      
+        &:hover {
+          color: #764ba2;
+          text-decoration: underline;
+        }
+      }
+
       .login-type-toggle {
         display: flex;
         gap: 1rem;

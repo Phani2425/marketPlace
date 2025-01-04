@@ -1,0 +1,518 @@
+// Main Container
+.sellers-management {
+  flex: 1;
+  padding: 2rem;
+  background: #f8fafc;
+  min-height: 100vh;
+  overflow-x: hidden;
+
+
+  .analytics-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+    width: 100%;
+
+    .chart-container {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      min-height: 300px;
+      overflow: hidden;
+
+      canvas {
+        width: 100% !important;
+        height: auto !important;
+        max-height: 300px;
+        max-width: 100%;
+      }
+    }
+  }
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+
+    button {
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+
+      &.block-btn {
+        background: #fee2e2;
+        color: #dc2626;
+        border: 1px solid #dc2626;
+
+        &:hover {
+          background: #dc2626;
+          color: white;
+        }
+      }
+      &.deregister-btn {
+        background: #fef2f2;
+        color: #ef4444;
+        border: 1px solid #ef4444;
+
+        &:hover {
+          background: #ef4444;
+          color: white;
+        }
+      }
+    }
+  }
+
+  // Page Header
+  .page-header {
+    margin-bottom: 2rem;
+
+    h1 {
+      font-size: 2.2rem;
+      color: #1e293b;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        border-radius: 3px;
+      }
+    }
+  }
+
+  // Controls Panel
+  .controls-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    .reset-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.5rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+      color: #64748b;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+
+      &:hover {
+        border-color: #3b82f6;
+        background: #f8fafc;
+        color: #3b82f6;
+      }
+
+      svg {
+        font-size: 1rem;
+      }
+    }
+
+    // Search and Sort Section
+    .search-sort {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+
+      .search-bar {
+        flex: 1;
+        min-width: 280px;
+        position: relative;
+
+        input {
+          width: 100%;
+          padding: 0.8rem 1rem 0.8rem 2.5rem;
+          border: 2px solid #e2e8f0;
+          border-radius: 8px;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+
+          &:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+        }
+
+        svg {
+          position: absolute;
+          left: 0.8rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #64748b;
+          font-size: 1rem;
+        }
+      }
+
+      .sort-options {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+
+        select {
+          min-width: 150px;
+          padding: 0.8rem 1rem;
+          border: 2px solid #e2e8f0;
+          border-radius: 8px;
+          font-size: 0.95rem;
+          color: #1e293b;
+          background: white;
+          cursor: pointer;
+          transition: all 0.3s ease;
+
+          &:focus {
+            outline: none;
+            border-color: #3b82f6;
+          }
+        }
+
+        button {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.8rem 1.2rem;
+          border: 2px solid #e2e8f0;
+          border-radius: 8px;
+          background: white;
+          color: #1e293b;
+          font-size: 0.95rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          white-space: nowrap;
+
+          &:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+          }
+        }
+      }
+    }
+
+    // Filter Panel
+    .filter-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #f1f5f9;
+
+      .filter-section {
+        h3 {
+          font-size: 0.95rem;
+          color: #1e293b;
+          margin-bottom: 1rem;
+          font-weight: 500;
+        }
+
+        // Revenue Range Inputs
+        .range-inputs {
+          display: flex;
+          gap: 1rem;
+          flex-wrap: wrap;
+
+          input {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.8rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+
+            &:focus {
+              outline: none;
+              border-color: #3b82f6;
+            }
+
+            &::placeholder {
+              color: #94a3b8;
+            }
+          }
+        }
+
+        // Rating Selector
+        .rating-selector {
+          display: flex;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+
+          button {
+            padding: 0.8rem 1.2rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            color: #1e293b;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+
+            &:hover {
+              background: #f8fafc;
+            }
+
+            &.active {
+              background: #3b82f6;
+              color: white;
+              border-color: #3b82f6;
+            }
+          }
+        }
+
+        // Status Select
+        select {
+          width: 100%;
+          padding: 0.8rem;
+          border: 2px solid #e2e8f0;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          color: #1e293b;
+          background: white;
+          cursor: pointer;
+          transition: all 0.3s ease;
+
+          &:focus {
+            outline: none;
+            border-color: #3b82f6;
+          }
+        }
+      }
+    }
+  }
+
+  // Data Grid
+  .data-grid {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    height: calc(100vh - 300px);
+    min-height: 400px;
+
+    .MuiDataGrid-root {
+      .MuiDataGrid-columnHeader:focus,
+      .MuiDataGrid-columnHeader:focus-within,
+      .MuiDataGrid-cell:focus,
+      .MuiDataGrid-cell:focus-within,
+      .MuiCheckbox-root:focus,
+      .MuiCheckbox-root:focus-within {
+        outline: none !important;
+      }
+    }
+
+    // Seller Info Cell
+    .seller-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      height: 100%;
+      padding-block: 5px;
+
+      .store-avatar {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: auto 0;
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        svg {
+          font-size: 1.2rem;
+          color: #64748b;
+        }
+      }
+
+      .store-details {
+        h3 {
+          font-size: 0.95rem;
+          color: #1e293b;
+          margin-bottom: 0.2rem;
+        }
+
+        p {
+          font-size: 0.85rem;
+          color: #64748b;
+        }
+      }
+    }
+
+    // Other Grid Cells
+    .products,
+    .rating,
+    .revenue,
+    .status-badge,
+    .actions {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    .rating {
+      gap: 0.4rem;
+      color: #f59e0b;
+      font-weight: 500;
+    }
+
+    .revenue {
+      color: #059669;
+      font-weight: 500;
+    }
+
+    .status-badge {
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      width: fit-content;
+
+      &.active {
+        background: #dcfce7;
+        color: #16a34a;
+      }
+
+      &.blocked {
+        background: #fef2f2;
+        color: #ef4444;
+      }
+    }
+
+    .actions {
+      .view-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1.2rem;
+        border-radius: 8px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: #dbeafe;
+          transform: translateY(-2px);
+        }
+
+        svg {
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .sellers-management {
+    .analytics-charts {
+      grid-template-columns: 1fr;
+    }
+
+    .action-buttons {
+      flex-wrap: wrap;
+
+      button {
+        flex: 1;
+        min-width: 120px;
+      }
+    }
+    .controls-panel {
+      .search-sort {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+
+        .search-bar {
+          width: 100%;
+        }
+
+        .sort-options {
+          justify-content: space-between;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .sellers-management {
+    padding: 1rem;
+
+    .action-buttons {
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .page-header h1 {
+      font-size: 1.8rem;
+    }
+
+    .controls-panel {
+      padding: 1.5rem;
+
+      .filter-panel {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .sort-options {
+        flex-direction: column;
+        align-items: stretch;
+
+        select,
+        button {
+          width: 100%;
+        }
+      }
+    }
+
+    .data-grid {
+      height: calc(100vh - 200px);
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .sellers-management {
+    .controls-panel {
+      padding: 1rem;
+
+      .range-inputs {
+        flex-direction: column;
+
+        input {
+          width: 100%;
+        }
+      }
+    }
+  }
+}

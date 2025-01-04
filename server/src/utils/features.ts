@@ -8,6 +8,8 @@ import { InvalidateCacheProps, OrderItemType } from "../types/types.js";
 import nodemailer from 'nodemailer';
 import { User } from "../models/user.js";
 import crypto from 'crypto';
+import moment from 'moment';
+import { createIndexes } from "./createIndexes.js";
 
 interface EmailOptions {
   email: string;
@@ -99,9 +101,12 @@ export const connectDB = (uri: string) => {
     .connect(uri, {
       dbName: "Ecommerce_24",
     })
-    .then((c) => console.log(`DB Connected to ${c.connection.host}`))
+    .then((c) =>{ console.log(`DB Connected to ${c.connection.host}`);
+      createIndexes();
+    })
     .catch((e) => console.log(e));
 };
+
 
 export const invalidateCache = async ({
   product,
@@ -283,4 +288,29 @@ export const initializeAdmin = async () => {
   } catch (error) {
     console.error("Failed to initialize admin:", error);
   }
+};
+
+export const getLastMonths = () => {
+  const currentDate = moment();
+  currentDate.date(1);
+
+  const last6Months: string[] = [];
+  const last12Months: string[] = [];
+
+  for (let i = 0; i < 6; i++) {
+    const monthDate = currentDate.clone().subtract(i, "months");
+    const monthName = monthDate.format("MMM");
+    last6Months.unshift(monthName);
+  }
+
+  for (let i = 0; i < 12; i++) {
+    const monthDate = currentDate.clone().subtract(i, "months");
+    const monthName = monthDate.format("MMM"); 
+    last12Months.unshift(monthName);
+  }
+
+  return {
+    last12Months,
+    last6Months,
+  };
 };

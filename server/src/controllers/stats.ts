@@ -163,6 +163,8 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       }
     });
 
+
+
     const categoryCount = await getInventories({
       categories,
       productsCount,
@@ -192,6 +194,47 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       userRatio,
       latestTransaction: modifiedLatestTransaction,
     };
+
+    const sellerStats = await User.aggregate([
+      { $match: { role: "seller" } },
+      {
+        $group: {
+          _id: null,
+          totalSellers: { $sum: 1 },
+          sellerRevenue: { $sum: "$totalRevenue" }
+        }
+      }
+    ]);
+  
+    const newSellers = await User.countDocuments({
+      role: "seller",
+      createdAt: {
+        $gte: thisMonth.start,
+        $lte: thisMonth.end
+      }
+    });
+    const sellerGrowth = await getChartData({
+      length: 6,
+      today,
+      docArr: await User.find({ 
+        role: "seller",
+        createdAt: { $gte: sixMonthsAgo }
+      }).select("createdAt")
+    });
+  
+    stats = {
+      ...stats,
+      totalSellers: sellerStats[0]?.totalSellers || 0,
+      newSellers,
+      sellerGrowth,
+      revenueDistribution: {
+        top: sellerStats[0]?.sellerRevenue * 0.1 || 0,
+        middle: sellerStats[0]?.sellerRevenue * 0.4 || 0,
+        bottom: sellerStats[0]?.sellerRevenue * 0.5 || 0
+      }
+    };  
+
+   
 
     await redis.setex(key, redisTTL, JSON.stringify(stats));
   }

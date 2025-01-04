@@ -79,4 +79,7 @@ const schema = new mongoose.Schema(
   }
 );
 
+schema.index({ "orderItems.seller": 1 });
+schema.index({ createdAt: -1 });
+
 export const Order = mongoose.model("Order", schema);

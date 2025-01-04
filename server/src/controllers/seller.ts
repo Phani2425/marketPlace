@@ -12,7 +12,6 @@ import {
   deleteFromCloudinary,
   clearSellerCache
 } from "../utils/features.js";
-import mongoose from "mongoose";
 import { SellerStats, RecentOrder, OrderItem } from '../types/types.js';
 import { SellerAnalytics } from '../types/types.js';
 import { upload } from "../middlewares/multer.js";
@@ -226,9 +225,7 @@ export const getSellerStats = TryCatch(async (req, res, next) => {
   let stats: SellerStats;
   let cachedStats  = await redis.get(key);
 
-  if (cachedStats) {
-    stats = JSON.parse(cachedStats) as SellerStats;
-  } else {
+  
     const [products, orders] = await Promise.all([
       Product.find({ seller: sellerId }),
       Order.find({ "orderItems.seller": sellerId })
@@ -241,6 +238,22 @@ export const getSellerStats = TryCatch(async (req, res, next) => {
 
     const monthlyRevenue = new Array(6).fill(0);
     const monthlySales = new Array(6).fill(0);
+
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    orders.forEach(order => {
+      if (order.createdAt >= sixMonthsAgo) {
+        const monthIndex = 5 - Math.floor(
+          (new Date().getTime() - order.createdAt.getTime()) / 
+          (30 * 24 * 60 * 60 * 1000)
+        );
+        if (monthIndex >= 0) {
+          monthlyRevenue[monthIndex] += order.total;
+          monthlySales[monthIndex]++;
+        }
+      }
+    });
 
     const productCategories = products.reduce((acc, product) => {
       acc[product.category] = (acc[product.category] || 0) + 1;
@@ -269,7 +282,7 @@ export const getSellerStats = TryCatch(async (req, res, next) => {
     };
 
     await redis.setex(key, 1800, JSON.stringify(stats));
-  }
+  
 
   return res.status(200).json({
     success: true,
@@ -613,4 +626,86 @@ export const searchSellers = TryCatch(async (req, res, next) => {
       console.error("Error fetching product:", error);
       return next(new ErrorHandler("Error fetching product", 500));
     }
+  });
+
+  export const rateStore = TryCatch(async (req, res, next) => {
+    const { rating, userId } = req.body;
+    const { id: sellerId } = req.params;
+  
+    if (!rating || !userId || !sellerId) {
+      return next(new ErrorHandler("Missing required fields", 400));
+    }
+  
+    if (rating < 1 || rating > 5) {
+      return next(new ErrorHandler("Rating must be between 1 and 5", 400));
+    }
+  
+    const ratingUser = await User.findById(userId);
+    if (!ratingUser) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+  
+    const [seller, existingRating] = await Promise.all([
+      User.findById(sellerId),
+      User.findOne({
+        _id: sellerId,
+        "ratings.user": userId 
+      })
+    ]);
+  
+    if (!seller) {
+      return next(new ErrorHandler("Seller not found", 404));
+    }
+  
+    if (seller.role !== "seller" || seller.storeStatus !== "approved") {
+      return next(new ErrorHandler("Invalid seller or store not approved", 400));
+    }
+  
+    if (!seller.ratings) {
+      seller.ratings = [];
+    }
+  
+    if (!seller.sellerRating) {
+      seller.sellerRating = 0;
+    }
+    if (!seller.numOfReviews) {
+      seller.numOfReviews = 0;
+    }
+  
+    if (existingRating) {
+      const ratingIndex = seller.ratings.findIndex(
+        r => r.user.toString() === userId
+      );
+      
+      const oldRating = seller.ratings[ratingIndex].rating;
+      seller.ratings[ratingIndex].rating = rating;
+  
+      // Recalculate average rating
+      const totalRating = (seller.sellerRating * seller.numOfReviews) - oldRating + rating;
+      seller.sellerRating = totalRating / seller.numOfReviews;
+    } else {
+      seller.ratings.push({
+        user: userId, 
+        rating: rating
+      });
+  
+      const totalRating = (seller.sellerRating * seller.numOfReviews) + rating;
+      seller.numOfReviews += 1;
+      seller.sellerRating = totalRating / seller.numOfReviews;
+    }
+  
+    await seller.save();
+  
+    await Promise.all([
+      clearSellerCache(sellerId),
+      redis.del(`seller-analytics-${sellerId}`),
+      redis.del(`seller-stats-${sellerId}`),
+      redis.del("admin-sellers-list"),
+      redis.del(`admin-seller-detail-${sellerId}`)
+    ]);
+  
+    return res.status(200).json({
+      success: true,
+      message: existingRating ? "Rating updated successfully" : "Rating submitted successfully"
+    });
   });

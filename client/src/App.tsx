@@ -11,6 +11,11 @@ import { getUser } from "./redux/api/userAPI";
 import { userExist, userNotExist } from "./redux/reducer/userReducer";
 import { RootState } from "./redux/store";
 import Footer from "./components/footer";
+import SellersManagement from "./pages/admin/SellersManagement";
+import SellerDetail from "./pages/admin/SellerDetail";
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+const theme = createTheme();
 
 const Home = lazy(() => import("./pages/home"));
 const Search = lazy(() => import("./pages/search"));
@@ -22,7 +27,6 @@ const Orders = lazy(() => import("./pages/orders"));
 const OrderDetails = lazy(() => import("./pages/order-details"));
 const NotFound = lazy(() => import("./pages/not-found"));
 const Checkout = lazy(() => import("./pages/checkout"));
-
 
 // Admin Routes Importing
 const Dashboard = lazy(() => import("./pages/admin/dashboard"));
@@ -46,8 +50,9 @@ const DiscountManagement = lazy(
 );
 
 const NewDiscount = lazy(() => import("./pages/admin/management/newdiscount"));
-const SellerApplications = lazy(() => import("./pages/admin/SellerApplications"));
-
+const SellerApplications = lazy(
+  () => import("./pages/admin/SellerApplications")
+);
 
 // Seller Routes
 const SellerDashboard = lazy(() => import("./pages/seller/Dashboard"));
@@ -57,8 +62,8 @@ const SellerNewProduct = lazy(() => import("./pages/seller/SellerNewProduct"));
 const EditProduct = lazy(() => import("./pages/seller/EditProduct"));
 const StoreView = lazy(() => import("./pages/seller/StoreView"));
 const SellerOrders = lazy(() => import("./pages/seller/Orders"));
-const SellerAnalytics = lazy(() => import ("./pages/seller/Analytics"));
-
+const SellerAnalytics = lazy(() => import("./pages/seller/Analytics"));
+const SellerLogin = lazy(() => import("./pages/seller/SellerLogin"));
 
 const App = () => {
   const { user, loading } = useSelector(
@@ -73,18 +78,25 @@ const App = () => {
         const data = await getUser(user.uid);
         dispatch(userExist(data.user));
       } else {
-        // Check for stored admin data when no regular user is logged in
-        const adminDataStr = localStorage.getItem('adminData');
+        // Check for stored admin/seller data when no regular user is logged in
+        const adminDataStr = localStorage.getItem("adminData");
+        const sellerDataStr = localStorage.getItem("sellerData");
+        const now = new Date().getTime();
+  
         if (adminDataStr) {
           const adminData = JSON.parse(adminDataStr);
-          const now = new Date().getTime();
-          
           if (now < adminData.expiresAt) {
-            // Admin session is still valid
             dispatch(userExist(adminData.user));
           } else {
-            // Admin session expired, clear data
-            localStorage.removeItem('adminData');
+            localStorage.removeItem("adminData");
+            dispatch(userNotExist());
+          }
+        } else if (sellerDataStr) {
+          const sellerData = JSON.parse(sellerDataStr);
+          if (now < sellerData.expiresAt) {
+            dispatch(userExist(sellerData.user));
+          } else {
+            localStorage.removeItem("sellerData");
             dispatch(userNotExist());
           }
         } else {
@@ -94,18 +106,10 @@ const App = () => {
     });
   }, []);
 
-  // useEffect(() => {
-  //   onAuthStateChanged(auth, async (user) => {
-  //     if (user) {
-  //       const data = await getUser(user.uid);
-  //       dispatch(userExist(data.user));
-  //     } else dispatch(userNotExist());
-  //   });
-  // }, []);
-
   return loading ? (
     <Loader />
   ) : (
+    <ThemeProvider theme={theme}>
     <Router>
       {/* Header */}
       <Header user={user} />
@@ -115,7 +119,8 @@ const App = () => {
           <Route path="/search" element={<Search />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/store/:id" element={<StoreView />} /> 
+          <Route path="/store/:id" element={<StoreView />} />
+          <Route path="/seller-login" element={<SellerLogin />} />
           {/* Not logged In Route */}
           <Route
             path="/login"
@@ -150,6 +155,8 @@ const App = () => {
             <Route path="/admin/customer" element={<Customers />} />
             <Route path="/admin/transaction" element={<Transaction />} />
             <Route path="/admin/discount" element={<Discount />} />
+            <Route path="/admin/sellers" element={<SellersManagement />} />
+            <Route path="/admin/seller/:id" element={<SellerDetail />} />
 
             {/* Charts */}
             <Route path="/admin/chart/bar" element={<Barcharts />} />
@@ -175,20 +182,22 @@ const App = () => {
               element={<DiscountManagement />}
             />
 
-            <Route path="/admin/seller-applications" element={<SellerApplications />} />
+            <Route
+              path="/admin/seller-applications"
+              element={<SellerApplications />}
+            />
           </Route>
 
           {/* Seller Routes */}
           <Route
             element={
-              <ProtectedRoute 
+              <ProtectedRoute
                 isAuthenticated={user ? true : false}
                 sellerOnly={true}
                 seller={user?.role === "seller"}
               />
             }
           >
-              
             <Route path="/seller/dashboard" element={<SellerDashboard />} />
             <Route path="/seller/products" element={<ProductListing />} />
             <Route path="/seller/product/new" element={<SellerNewProduct />} />
@@ -203,6 +212,7 @@ const App = () => {
       <Footer />
       <Toaster position="bottom-center" />
     </Router>
+    </ThemeProvider>
   );
 };
 

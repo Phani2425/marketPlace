@@ -191,3 +191,49 @@ export const adminLogin = TryCatch(async (req, res, next) => {
     user: admin
   });
 });
+
+
+//temporary
+
+export const sellerLogin = TryCatch(async (req, res, next) => {
+  const { email, pin } = req.body;
+
+  if (!email || !pin) {
+    return next(new ErrorHandler("Please provide both email and PIN", 400));
+  }
+
+  // Find seller with given email and PIN
+  const seller = await User.findOne({ 
+    email, 
+    sellerPin: pin,
+    role: "seller",
+    storeStatus: "approved"
+  }).select("+sellerPin");
+
+  if (!seller) {
+    return next(new ErrorHandler("Invalid credentials", 401));
+  }
+
+  // Rate limiting
+  const rateLimitKey = `seller-login-attempts:${req.ip}`;
+  const attempts = await redis.incr(rateLimitKey);
+  if (attempts === 1) {
+    await redis.expire(rateLimitKey, 300); // 5 minutes
+  }
+
+  if (attempts > 5) {
+    return next(new ErrorHandler("Too many login attempts. Try again later.", 429));
+  }
+
+  // Clear rate limit on successful login
+  await redis.del(rateLimitKey);
+
+  // Remove sensitive data
+  seller.sellerPin = undefined;
+
+  return res.status(200).json({
+    success: true,
+    message: "Login successful",
+    user: seller
+  });
+});

@@ -62,6 +62,8 @@ $color3: rgb(0, 104, 136);
 @import "admin-styles/dashboardapp";
 @import "admin-styles/mediaquery";
 @import "admin-styles/sellerApplication";
+@import 'admin-styles/sellerDetail';
+@import 'admin-styles/sellersManagement';
 
 @import "seller/dashboard";
 @import "seller/becomeSellerForm";
@@ -75,6 +77,9 @@ $color3: rgb(0, 104, 136);
 @import "dragDropImageUpload";
 @import "singleImageDrop";
 @import 'shareModal';
+@import "seller/sellerlogin";
+@import "productCard";
+
 
 .container {
   max-width: 1367px;

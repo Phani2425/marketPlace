@@ -4,7 +4,8 @@ import {
   getAllUsers,
   getUser,
   newUser,
-  adminLogin
+  adminLogin,
+  sellerLogin
 } from "../controllers/user.js";
 import { adminOnly } from "../middlewares/auth.js";
 
@@ -20,5 +21,8 @@ app.get("/all", adminOnly, getAllUsers);
 app.route("/:id").get(getUser).delete(adminOnly, deleteUser);
 
 app.post("/admin-login", adminLogin);
+
+//remove this in production
+app.post("/seller-login", sellerLogin);
 
 export default app;

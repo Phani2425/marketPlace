@@ -6,11 +6,11 @@ import { auth } from "../firebase";
 import { useDispatch } from "react-redux";
 import { userExist } from "../redux/reducer/userReducer";
 import { toast } from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { server } from "../redux/store";
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -32,18 +32,15 @@ const Login = () => {
           const { data } = await axios.post(
             `${server}/api/v1/user/admin-login`,
             { secretKey: adminKey.trim() }
-            // { withCredentials: true ,
-            // headers: {
-            //   "Content-Type": "application/json"
-            // }}
+            
           );
 
           if (data.success) {
             const adminData = {
               user: data.user,
-              expiresAt: new Date().getTime() + (24 * 60 * 60 * 1000) // 24 hours
+              expiresAt: new Date().getTime() + 24 * 60 * 60 * 1000, // 24 hours
             };
-            localStorage.setItem('adminData', JSON.stringify(adminData));
+            localStorage.setItem("adminData", JSON.stringify(adminData));
             toast.success("Welcome Admin!");
             dispatch(userExist(data.user));
             setTimeout(() => {
@@ -75,12 +72,6 @@ const Login = () => {
           gender,
           dob: date,
           _id: user.uid,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
         }
       );
 
@@ -187,22 +178,22 @@ const Login = () => {
               animate={{ opacity: 1 }}
             >
               <label>Admin Secret Key</label>
-              <div className='password-input'>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={adminKey}
-                onChange={(e) => setAdminKey(e.target.value)}
-                placeholder="Enter admin secret key"
-                required
-              />
-              <button
-                type="button"
-                className="toggle-password"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
+              <div className="password-input">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={adminKey}
+                  onChange={(e) => setAdminKey(e.target.value)}
+                  placeholder="Enter admin secret key"
+                  required
+                />
+                <button
+                  type="button"
+                  className="toggle-password"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
               </div>
             </motion.div>
           ) : (
@@ -296,6 +287,11 @@ const Login = () => {
                 : "New to DisposableMart? Create Account"}
             </motion.p>
           )}
+          
+
+          <Link to="/seller-login" className="seller-login-link">
+            Login as Seller
+          </Link>
         </main>
       </div>
     </div>

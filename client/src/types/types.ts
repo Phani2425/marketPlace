@@ -101,6 +101,14 @@ export type Stats = {
     female: number;
   };
   latestTransaction: LatestTransaction[];
+  totalSellers: number;
+  newSellers: number;
+  sellerGrowth: number[];
+  revenueDistribution: {
+    top: number;
+    middle: number;
+    bottom: number;
+  };
 };
 
 type OrderFullfillment = {
@@ -157,3 +165,33 @@ export type CouponType = {
 };
 
 
+
+
+export interface Photo {
+  public_id: string;
+  url: string;
+  _id: string;
+  id: string;
+}
+
+export interface ProductForCard {
+  _id: string;
+  name: string;
+  photos: Photo[];
+  price: number;
+  stock: number;
+  category: string;
+  description: string;
+  ratings: number;
+  numOfReviews: number;
+  seller: string;
+  sellerName: string;
+  sellerRating: number;
+  sellerNumOfReviews: number;
+  isApproved: boolean;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  storeUrl: string;
+  id: string;
+}

@@ -85,7 +85,7 @@
     padding: 2rem;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    margin-top: auto; // Push to bottom if space available
+    margin-top: auto; 
 
     h2 {
       color: $color4;
@@ -99,7 +99,7 @@
       border-collapse: collapse;
 
       th, td {
-        padding: 1rem;
+        padding: 1.5rem;
         text-align: left;
         border-bottom: 1px solid #eee;
       }
@@ -111,10 +111,12 @@
       }
 
       .status {
-        padding: 0.5rem 1rem;
+        padding: 0.3rem 0.7rem;
         border-radius: 50px;
         font-size: 0.9rem;
         font-weight: 500;
+        text-align:center;
+        
 
         &.processing { 
           background: #fff3e0;

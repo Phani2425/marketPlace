@@ -130,7 +130,7 @@ const ProductListing = () => {
                       <FaTags /> {product.category}
                     </span>
                   </div>
-                </div>{" "}
+                </div>
                 <div className="actions">
                   <Link
                     to={`/seller/product/${product._id}`}

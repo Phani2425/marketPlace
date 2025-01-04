@@ -138,12 +138,13 @@ const resetSidebar = () => {
 const logoutHandler = async () => {
   try {
     localStorage.removeItem('adminData');
+    localStorage.removeItem('sellerData');
     await signOut(auth);
     toast.success("Sign Out Successfully");
     resetSidebar();
     navigate('/');
   } catch (error) {
-    toast.error("Sign Out Fail");
+    toast.error("Sign Out Failed");
   }
 };
 

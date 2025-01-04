@@ -1,16 +1,19 @@
 import { BiMaleFemale } from "react-icons/bi";
 import { BsSearch } from "react-icons/bs";
-import { FaRegBell } from "react-icons/fa";
+import { FaChartLine, FaRegBell } from "react-icons/fa";
 import { HiTrendingDown, HiTrendingUp } from "react-icons/hi";
 import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import AdminSidebar from "../../components/admin/AdminSidebar";
-import { BarChart, DoughnutChart } from "../../components/admin/Charts";
+import { BarChart, DoughnutChart, LineChart } from "../../components/admin/Charts";
 import Table from "../../components/admin/DashboardTable";
 import { Skeleton } from "../../components/loader";
 import { useStatsQuery } from "../../redux/api/dashboardAPI";
 import { RootState } from "../../redux/store";
 import { getLastMonths } from "../../utils/features";
+import { Link } from "react-router-dom";
+import {motion} from "framer-motion";
+import { Stats } from "../../types/types";
 
 const userImg =
   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSJxA5cTf-5dh5Eusm0puHbvAhOrCRPtckzjA&usqp";
@@ -22,7 +25,10 @@ const Dashboard = () => {
 
   const { isLoading, data, isError } = useStatsQuery(user?._id!);
 
-  const stats = data?.stats!;
+  if (isError) return <Navigate to={"/"} />;
+  if (!data?.stats) return <Skeleton length={20} />; 
+
+  const stats: Stats = data?.stats;
 
   if (isError) return <Navigate to={"/"} />;
 
@@ -88,7 +94,7 @@ const Dashboard = () => {
                 <h2>Inventory</h2>
 
                 <div>
-                  {stats.categoryCount.map((i) => {
+                  {stats.categoryCount.map((_,i:number) => {
                     const [heading, value] = Object.entries(i)[0];
                     return (
                       <CategoryItem
@@ -120,6 +126,53 @@ const Dashboard = () => {
                 </p>
               </div>
               <Table data={stats.latestTransaction} />
+            </section>
+
+            <section className="seller-overview">
+              <div className="section-header">
+                <h2>Seller Management</h2>
+                <Link to="/admin/sellers" className="view-all">
+                  <FaChartLine /> View Detailed Analytics
+                </Link>
+              </div>
+              <div className="analytics-grid">
+                <div className="stats-cards">
+                  <motion.div className="stat-card" whileHover={{ y: -5 }}>
+                    <h3>Total Sellers</h3>
+                    <p>{stats.totalSellers || 0}</p>
+                    <span className="trend">
+                      {stats.newSellers > 0 && `+${stats.newSellers} this month`}
+                    </span>
+                  </motion.div>
+                </div><div className="charts-section">
+                  <div className="chart-container">
+                    <h3>Seller Growth Trend</h3>
+                    <LineChart
+                      data={stats.sellerGrowth || []}
+                      label="New Sellers"
+                      labels={months}
+                      backgroundColor="rgba(53, 162, 235, 0.5)"
+                      borderColor="rgb(53, 162, 235)"
+                    />
+                  </div>
+                  <div className="chart-container">
+                    <h3>Revenue Distribution</h3>
+                    <DoughnutChart
+                      labels={["Top 10%", "Next 40%", "Bottom 50%"]}
+                      data={[
+                        stats.revenueDistribution?.top || 0,
+                        stats.revenueDistribution?.middle || 0,
+                        stats.revenueDistribution?.bottom || 0,
+                      ]}
+                      backgroundColor={[
+                        "rgb(255, 99, 132)",
+                        "rgb(54, 162, 235)",
+                        "rgb(255, 206, 86)",
+                      ]}
+                    />
+                  </div>
+                </div>
+              </div>
             </section>
           </>
         )}
